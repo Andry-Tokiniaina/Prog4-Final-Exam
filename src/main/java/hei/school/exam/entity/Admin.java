@@ -7,5 +7,4 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Admin extends User{
-}
+public class Admin extends User {}
