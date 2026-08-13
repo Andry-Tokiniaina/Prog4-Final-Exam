@@ -1,0 +1,1562 @@
+openapi: 3.0.3
+info:
+  title: HEI - Graduate Management API
+  version: "1.1.0"
+  description: >
+    API for managing HEI graduates: tracks, semesters, courses, exams,
+    teachers, groups, students, grades (with history), and cohorts.
+    Sends PDF transcripts by email (asynchronously) and exports Excel
+    lists of graduates.
+
+
+    **Authentication**: this API relies on Spring Security's default
+    login/logout (session-based, `POST /login` form, `POST /logout`),
+    generated automatically by the framework. These endpoints are not
+    documented here since they are not JSON-based and are handled
+    natively by Spring Security. Once authenticated, the client keeps
+    its session via the `JSESSIONID` cookie.
+
+servers:
+  - url: https://your-app-preprod.poja.io
+    description: Preprod
+  - url: https://your-app.poja.io
+    description: Prod
+
+tags:
+  - name: Students
+  - name: Teachers
+  - name: Tracks
+  - name: Semesters
+  - name: Courses
+  - name: Exams
+  - name: Groups
+  - name: Grades
+  - name: Cohorts
+  - name: Transcripts
+
+security:
+  - cookieAuth: []
+
+paths:
+
+  # ---------- STUDENTS (self-service) ----------
+  /students/me:
+    get:
+      tags: [Students]
+      summary: Get the current student's profile
+      description: "Required role: STUDENT"
+      responses:
+        '200':
+          description: Student profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+  /students/me/grades:
+    get:
+      tags: [Grades]
+      summary: View MY grades
+      description: "Required role: STUDENT. A student can only view their own grades."
+      responses:
+        '200':
+          description: List of the current student's grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  /students/me/transcript:
+    post:
+      tags: [Transcripts]
+      summary: Request the transcript to be sent by email
+      description: >
+        Triggers asynchronous generation of the PDF transcript, uploads it
+        to S3, then sends an email containing a download link (presigned
+        URL). Required role: STUDENT (for themselves only).
+      responses:
+        '202':
+          description: Request accepted, processing asynchronously
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptRequestAccepted'
+
+  # ---------- STUDENTS (admin/teacher management) ----------
+  /students:
+    get:
+      tags: [Students]
+      summary: List students
+      description: "Required role: ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/CohortIdFilter'
+        - $ref: '#/components/parameters/GroupIdFilter'
+        - $ref: '#/components/parameters/TrackIdFilter'
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+    post:
+      tags: [Students]
+      summary: Create a student
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentInput'
+      responses:
+        '201':
+          description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+  /students/{studentId}:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    get:
+      tags: [Students]
+      summary: Get a student
+      description: "Required role: ADMIN, or TEACHER if the student is enrolled in one of their courses"
+      responses:
+        '200':
+          description: Student details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+    put:
+      tags: [Students]
+      summary: Update a student
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentInput'
+      responses:
+        '200':
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+    delete:
+      tags: [Students]
+      summary: Delete a student
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Student deleted
+
+  /students/{studentId}/group:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    put:
+      tags: [Students]
+      summary: Change the student's group
+      description: >
+        A student can change group at any time during their track.
+        Required role: ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupId]
+              properties:
+                groupId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+  /students/{studentId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    get:
+      tags: [Grades]
+      summary: View a student's grades
+      description: "Required role: ADMIN, or TEACHER for their own courses only"
+      responses:
+        '200':
+          description: List of grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  /students/{studentId}/transcript:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    post:
+      tags: [Transcripts]
+      summary: Request a student's transcript to be sent by email
+      description: "Required role: ADMIN"
+      responses:
+        '202':
+          description: Request accepted, processing asynchronously
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptRequestAccepted'
+
+  # ---------- TEACHERS ----------
+  /teachers:
+    get:
+      tags: [Teachers]
+      summary: List teachers
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of teachers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Teacher'
+    post:
+      tags: [Teachers]
+      summary: Create a teacher
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherInput'
+      responses:
+        '201':
+          description: Teacher created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+
+  /teachers/{teacherId}:
+    parameters:
+      - $ref: '#/components/parameters/TeacherId'
+    get:
+      tags: [Teachers]
+      summary: Get a teacher
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Teacher details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+    put:
+      tags: [Teachers]
+      summary: Update a teacher
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherInput'
+      responses:
+        '200':
+          description: Teacher updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+    delete:
+      tags: [Teachers]
+      summary: Delete a teacher
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Teacher deleted
+
+  /teachers/me/courses:
+    get:
+      tags: [Teachers]
+      summary: List the current teacher's courses
+      description: "Required role: TEACHER"
+      responses:
+        '200':
+          description: List of taught courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+  # ---------- TRACKS ----------
+  /tracks:
+    get:
+      tags: [Tracks]
+      summary: List tracks
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Track'
+    post:
+      tags: [Tracks]
+      summary: Create a track
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackInput'
+      responses:
+        '201':
+          description: Track created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Track'
+
+  /tracks/{trackId}:
+    parameters:
+      - $ref: '#/components/parameters/TrackId'
+    get:
+      tags: [Tracks]
+      summary: Get a track
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Track'
+    put:
+      tags: [Tracks]
+      summary: Update a track
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackInput'
+      responses:
+        '200':
+          description: Track updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Track'
+    delete:
+      tags: [Tracks]
+      summary: Delete a track
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Track deleted
+
+  /tracks/{trackId}/courses:
+    parameters:
+      - $ref: '#/components/parameters/TrackId'
+    get:
+      tags: [Tracks]
+      summary: List a track's courses, across all semesters
+      description: >
+        Aggregate of the courses assigned to this track across all 6 of
+        its semesters (dedicated + common core). For per-semester
+        assignment, see PUT /tracks/{trackId}/semesters/{semesterId}/courses.
+        Required role: ADMIN.
+      responses:
+        '200':
+          description: List of the track's courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+  /tracks/{trackId}/semesters/{semesterId}/courses:
+    parameters:
+      - $ref: '#/components/parameters/TrackId'
+      - $ref: '#/components/parameters/SemesterId'
+    get:
+      tags: [Tracks]
+      summary: List the courses assigned to this track for this semester
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of assigned courses (total credits must equal 30)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    put:
+      tags: [Tracks]
+      summary: Replace the list of courses assigned to this track for this semester
+      description: >
+        Fully replaces the list of assigned courses (rather than an
+        incremental add/remove), so that the sum of credits can be
+        validated as exactly 30 in a single atomic operation. Required
+        role: ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseAssignmentInput'
+      responses:
+        '200':
+          description: Assignment updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+        '422':
+          description: "The sum of credits of the provided courses does not equal 30"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /semesters:
+    get:
+      tags: [Semesters]
+      summary: List semesters (S1 to S6, global entity)
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of semesters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Semester'
+    post:
+      tags: [Semesters]
+      summary: Create a semester
+      description: >
+        Required role: ADMIN. A semester is a global entity (number from 1
+        to 6), shared by all tracks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterInput'
+      responses:
+        '201':
+          description: Semester created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+
+  /semesters/{semesterId}:
+    parameters:
+      - $ref: '#/components/parameters/SemesterId'
+    get:
+      tags: [Semesters]
+      summary: Get a semester
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Semester details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+    delete:
+      tags: [Semesters]
+      summary: Delete a semester
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Semester deleted
+
+  /semesters/{semesterId}/courses:
+    parameters:
+      - $ref: '#/components/parameters/SemesterId'
+    get:
+      tags: [Courses]
+      summary: List the courses assigned to this semester, across all tracks
+      description: >
+        Read-only aggregate of every track/semester assignment for this
+        semester number (useful for an admin-wide overview). For
+        assignment, see PUT /tracks/{trackId}/semesters/{semesterId}/courses.
+        Required role: ADMIN.
+      responses:
+        '200':
+          description: List of the semester's courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+  # ---------- COURSES ----------
+  /courses:
+    get:
+      tags: [Courses]
+      summary: List courses
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    post:
+      tags: [Courses]
+      summary: Create a course
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+      responses:
+        '201':
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+
+  /courses/{courseId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: Get a course
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+    put:
+      tags: [Courses]
+      summary: Update a course
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+      responses:
+        '200':
+          description: Course updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+    delete:
+      tags: [Courses]
+      summary: Delete a course
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Course deleted
+
+  /courses/{courseId}/teachers:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: List a course's teachers
+      description: "A course can be taught by several teachers. Required role: ADMIN"
+      responses:
+        '200':
+          description: List of assigned teachers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Teacher'
+    post:
+      tags: [Courses]
+      summary: Assign a teacher to the course
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [teacherId]
+              properties:
+                teacherId:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: Teacher assigned
+
+  /courses/{courseId}/teachers/{teacherId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/TeacherId'
+    delete:
+      tags: [Courses]
+      summary: Remove a teacher from the course
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Teacher removed
+
+  /courses/{courseId}/groups:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: List the groups this course is given to
+      description: >
+        A course is given to several groups, but not necessarily all of
+        them. Required role: ADMIN, TEACHER (if assigned to the course)
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+    post:
+      tags: [Courses]
+      summary: Add a group to the course
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupId]
+              properties:
+                groupId:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: Group added to the course
+
+  /courses/{courseId}/groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/GroupId'
+    delete:
+      tags: [Courses]
+      summary: Remove a group from the course
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Group removed from the course
+
+  /courses/{courseId}/tracks:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: List the tracks a course is associated with
+      description: >
+        List derived from existing assignments (see
+        PUT /tracks/{trackId}/semesters/{semesterId}/courses): a dedicated
+        course appears in a single track; a common core course appears in
+        every track. Required role: ADMIN.
+      responses:
+        '200':
+          description: List of associated tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Track'
+
+  /courses/{courseId}/exams:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Exams]
+      summary: List a course's exams
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      responses:
+        '200':
+          description: List of exams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exam'
+    post:
+      tags: [Exams]
+      summary: Create an exam for this course
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamInput'
+      responses:
+        '201':
+          description: Exam created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exam'
+
+  /courses/{courseId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Grades]
+      summary: List all grades for a course (across all exams)
+      description: "Required role: TEACHER (if assigned to the course), ADMIN"
+      responses:
+        '200':
+          description: List of the course's grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  # ---------- EXAMS ----------
+  /exams/{examId}:
+    parameters:
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Exams]
+      summary: Get an exam
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      responses:
+        '200':
+          description: Exam details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exam'
+    put:
+      tags: [Exams]
+      summary: Update an exam (date, coefficient)
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamInput'
+      responses:
+        '200':
+          description: Exam updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exam'
+    delete:
+      tags: [Exams]
+      summary: Delete an exam
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Exam deleted
+
+  /exams/{examId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/ExamId'
+    get:
+      tags: [Grades]
+      summary: List the grades obtained for this exam
+      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      responses:
+        '200':
+          description: List of the exam's grades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  # ---------- GROUPS ----------
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups
+      description: "Required role: ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/CohortIdFilter'
+        - $ref: '#/components/parameters/TrackIdFilter'
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+    post:
+      tags: [Groups]
+      summary: Create a group
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+  /groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      summary: Get a group
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+    put:
+      tags: [Groups]
+      summary: Update a group
+      description: "Required role: ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+    delete:
+      tags: [Groups]
+      summary: Delete a group
+      description: "Required role: ADMIN"
+      responses:
+        '204':
+          description: Group deleted
+
+  /groups/{groupId}/students:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      summary: List the group's students
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+  # ---------- GRADES ----------
+  /grades:
+    post:
+      tags: [Grades]
+      summary: Create a grade
+      description: "Required role: TEACHER (for their own courses), ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeInput'
+      responses:
+        '201':
+          description: Grade created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+  /grades/{gradeId}:
+    parameters:
+      - $ref: '#/components/parameters/GradeId'
+    get:
+      tags: [Grades]
+      summary: Get a grade
+      description: "Required role: ADMIN, TEACHER (for their own courses), STUDENT (for their own grade)"
+      responses:
+        '200':
+          description: Grade details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+    put:
+      tags: [Grades]
+      summary: Update a grade
+      description: >
+        A grade can change over time (dispute, error), but a reason is
+        mandatory for every modification and a history is kept. Required
+        role: TEACHER (for their own courses), ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeUpdate'
+      responses:
+        '200':
+          description: Grade updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+  /grades/{gradeId}/history:
+    parameters:
+      - $ref: '#/components/parameters/GradeId'
+    get:
+      tags: [Grades]
+      summary: View the history of changes to a grade
+      description: "Required role: ADMIN, TEACHER (for their own courses), STUDENT (for their own grade)"
+      responses:
+        '200':
+          description: History of changes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeHistoryEntry'
+
+  # ---------- COHORTS ----------
+  /cohorts:
+    get:
+      tags: [Cohorts]
+      summary: List cohorts
+      description: >
+        Used in particular by the Thymeleaf interface to list every
+        cohort. Required role: ADMIN.
+      responses:
+        '200':
+          description: List of cohorts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cohort'
+
+  /cohorts/{cohortId}:
+    parameters:
+      - $ref: '#/components/parameters/CohortId'
+    get:
+      tags: [Cohorts]
+      summary: Get a cohort
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Cohort details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+
+  /cohorts/{cohortId}/results:
+    parameters:
+      - $ref: '#/components/parameters/CohortId'
+    get:
+      tags: [Cohorts]
+      summary: View the cohort's results over the 3 years
+      description: "Required role: ADMIN"
+      responses:
+        '200':
+          description: Aggregated cohort results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CohortResults'
+
+  /cohorts/{cohortId}/graduates:
+    parameters:
+      - $ref: '#/components/parameters/CohortId'
+    get:
+      tags: [Cohorts]
+      summary: List the cohort's graduates, ranked
+      description: >
+        A student is considered graduated once they have obtained an
+        average of 10 or above in every one of their courses. The list is
+        sorted by rank (rank 1 = best overall average).
+        Required role: ADMIN.
+      responses:
+        '200':
+          description: List of graduates sorted by rank
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GraduateEntry'
+
+  /cohorts/{cohortId}/graduates/export:
+    parameters:
+      - $ref: '#/components/parameters/CohortId'
+    get:
+      tags: [Cohorts]
+      summary: Download the cohort's graduate list as an Excel file
+      description: >
+        Direct download (no email) of an Excel file containing the rank,
+        student reference (STD), last name, first name, and overall
+        average of each graduate, sorted by rank. Used by the download
+        button in the Thymeleaf interface. Required role: ADMIN.
+      responses:
+        '200':
+          description: Excel file of graduates
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+components:
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: >
+        Default Spring Security session, obtained via the native login
+        form (POST /login) and invalidated via POST /logout.
+
+  parameters:
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TeacherId:
+      name: teacherId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TrackId:
+      name: trackId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SemesterId:
+      name: semesterId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ExamId:
+      name: examId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    GroupId:
+      name: groupId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    GradeId:
+      name: gradeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CohortId:
+      name: cohortId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CohortIdFilter:
+      name: cohortId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+    GroupIdFilter:
+      name: groupId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+    TrackIdFilter:
+      name: trackId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+
+    Role:
+      type: string
+      enum: [STUDENT, TEACHER, ADMIN]
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ref:
+          type: string
+          description: Student reference (e.g. STD24001)
+          example: STD24001
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        groupId:
+          type: string
+          format: uuid
+        trackId:
+          type: string
+          format: uuid
+        cohortId:
+          type: string
+          format: uuid
+
+    StudentInput:
+      type: object
+      required: [std, firstName, lastName, email, groupId, trackId, cohortId]
+      properties:
+        std:
+          type: string
+          example: STD2024001
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        groupId:
+          type: string
+          format: uuid
+
+    Teacher:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+
+    TeacherInput:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Track:
+      type: object
+      description: >
+        A track has 3 years of 2 semesters each (6 semesters in total),
+        for a mandatory total of 180 credits (30 per semester). A track
+        has a list of courses: its dedicated courses, plus the common
+        core courses shared with the other tracks.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        expectedTotalCredits:
+          type: integer
+          default: 180
+          description: Total credits expected over the whole track (fixed business rule).
+
+    TrackInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Semester:
+      type: object
+      description: >
+        A semester is a global entity (S1 to S6, shared by all tracks)
+        and is not specific to a track. For a given track, the sum of
+        credits of its courses (dedicated + common core) attached to this
+        semester must equal 30.
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 1
+        year:
+          type: integer
+          minimum: 1
+          maximum: 3
+          description: "Corresponding track year (computed: year = ceil(number / 2))."
+          example: 1
+        expectedCredits:
+          type: integer
+          default: 30
+          description: Number of credits expected per track for this semester (fixed business rule).
+
+    SemesterInput:
+      type: object
+      required: [number]
+      properties:
+        number:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 1
+
+    Course:
+      type: object
+      description: >
+        A course is created independently of any track or semester. Its
+        association with one (or more) tracks for a given semester is
+        done via PUT /tracks/{trackId}/semesters/{semesterId}/courses,
+        which replaces the full list of assigned courses (atomic
+        validation of the 30-credit total). A course associated with
+        EVERY track for a given semester is a common core course.
+      properties:
+        id:
+          type: string
+          format: uuid
+        ref:
+          type: string
+          description: Course code / reference
+          example: INFO301
+        title:
+          type: string
+        credit:
+          type: integer
+          example: 5
+
+    CourseInput:
+      type: object
+      required: [ref, title, credit]
+      properties:
+        ref:
+          type: string
+          example: INFO301
+        title:
+          type: string
+        credit:
+          type: integer
+          example: 5
+
+    CourseAssignmentInput:
+      type: object
+      required: [courseIds]
+      description: >
+        Full list of courses assigned to a track for a given semester.
+        Fully replaces the existing assignment (rather than an
+        incremental add/remove), so the sum of credits can be validated
+        as 30 in a single operation.
+      properties:
+        courseIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    Exam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        coefficient:
+          type: number
+          format: float
+          example: 1.5
+
+    ExamInput:
+      type: object
+      required: [date, coefficient]
+      properties:
+        date:
+          type: string
+          format: date
+        coefficient:
+          type: number
+          format: float
+          example: 1.5
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cohortId:
+          type: string
+          format: uuid
+        trackId:
+          type: string
+          format: uuid
+
+    GroupInput:
+      type: object
+      required: [name, cohortId, trackId]
+      properties:
+        name:
+          type: string
+        cohortId:
+          type: string
+          format: uuid
+        trackId:
+          type: string
+          format: uuid
+
+    Grade:
+      type: object
+      description: Grade obtained by a student for a given exam.
+      properties:
+        id:
+          type: string
+          format: uuid
+        studentId:
+          type: string
+          format: uuid
+        examId:
+          type: string
+          format: uuid
+        value:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 20
+        updatedAt:
+          type: string
+          format: date-time
+
+    GradeInput:
+      type: object
+      required: [studentId, examId, value]
+      properties:
+        studentId:
+          type: string
+          format: uuid
+        examId:
+          type: string
+          format: uuid
+        value:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 20
+
+    GradeUpdate:
+      type: object
+      required: [value, reason]
+      properties:
+        value:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 20
+        reason:
+          type: string
+          description: Mandatory reason for the modification (dispute, error, etc.)
+
+    GradeHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        previousValue:
+          type: number
+          format: float
+        newValue:
+          type: number
+          format: float
+        reason:
+          type: string
+        changedBy:
+          type: string
+          format: uuid
+        changedAt:
+          type: string
+          format: date-time
+
+    Cohort:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        startYear:
+          type: integer
+        endYear:
+          type: integer
+
+    CohortResults:
+      type: object
+      properties:
+        cohortId:
+          type: string
+          format: uuid
+        averageByYear:
+          type: array
+          items:
+            type: object
+            properties:
+              year:
+                type: integer
+              average:
+                type: number
+                format: float
+        graduatedCount:
+          type: integer
+        studentCount:
+          type: integer
+
+    GraduateEntry:
+      type: object
+      description: Row of a cohort's graduate list, sorted by rank.
+      properties:
+        rank:
+          type: integer
+          example: 1
+        std:
+          type: string
+          description: Student reference
+          example: STD2024001
+        lastName:
+          type: string
+        firstName:
+          type: string
+        average:
+          type: number
+          format: float
+          description: Student's overall average
+
+    TranscriptRequestAccepted:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The transcript will be sent by email shortly."
