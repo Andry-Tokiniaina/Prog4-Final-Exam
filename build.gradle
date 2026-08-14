@@ -118,6 +118,9 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.6.0'
     implementation 'org.hibernate.orm:hibernate-community-dialects:6.4.3.Final'
 
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
 
     implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.0'

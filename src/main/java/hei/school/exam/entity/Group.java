@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "groups")
 @Data
 public class Group {
   @Id
