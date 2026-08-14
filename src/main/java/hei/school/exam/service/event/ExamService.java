@@ -14,46 +14,46 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ExamService {
 
-    private final ExamRepository examRepository;
-    private final CourseRepository courseRepository;
+  private final ExamRepository examRepository;
+  private final CourseRepository courseRepository;
 
-    public List<Exam> findAllByCourse(UUID courseId) {
-        return examRepository.findAll()
-                .stream()
-                .filter(exam ->
-                        exam.getCourse() != null
-                                && exam.getCourse().getId().equals(courseId))
-                .toList();
-    }
+  public List<Exam> findAllByCourse(UUID courseId) {
+    return examRepository.findAll().stream()
+        .filter(exam -> exam.getCourse() != null && exam.getCourse().getId().equals(courseId))
+        .toList();
+  }
 
-    public Exam findById(UUID id) {
-        return examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found: " + id));
-    }
+  public Exam findById(UUID id) {
+    return examRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Exam not found: " + id));
+  }
 
-    @Transactional
-    public Exam create(UUID courseId, Exam exam) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+  @Transactional
+  public Exam create(UUID courseId, Exam exam) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
 
-        exam.setCourse(course);
+    exam.setCourse(course);
 
-        return examRepository.save(exam);
-    }
+    return examRepository.save(exam);
+  }
 
-    @Transactional
-    public Exam update(UUID id, Exam updatedExam) {
-        Exam exam = findById(id);
+  @Transactional
+  public Exam update(UUID id, Exam updatedExam) {
+    Exam exam = findById(id);
 
-        exam.setDate(updatedExam.getDate());
-        exam.setCoefficient(updatedExam.getCoefficient());
+    exam.setDate(updatedExam.getDate());
+    exam.setCoefficient(updatedExam.getCoefficient());
 
-        return examRepository.save(exam);
-    }
+    return examRepository.save(exam);
+  }
 
-    @Transactional
-    public void delete(UUID id) {
-        Exam exam = findById(id);
-        examRepository.delete(exam);
-    }
+  @Transactional
+  public void delete(UUID id) {
+    Exam exam = findById(id);
+    examRepository.delete(exam);
+  }
 }
