@@ -12,41 +12,42 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TeacherService {
 
-    private final TeacherRepository teacherRepository;
+  private final TeacherRepository teacherRepository;
 
-    public List<Teacher> findAll() {
-        return teacherRepository.findAll();
-    }
+  public List<Teacher> findAll() {
+    return teacherRepository.findAll();
+  }
 
-    public Teacher findById(UUID id) {
-        return teacherRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Teacher not found: " + id));
-    }
+  public Teacher findById(UUID id) {
+    return teacherRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Teacher not found: " + id));
+  }
 
-    @Transactional
-    public Teacher create(Teacher teacher) {
-        return teacherRepository.save(teacher);
-    }
+  @Transactional
+  public Teacher create(Teacher teacher) {
+    return teacherRepository.save(teacher);
+  }
 
-    @Transactional
-    public Teacher update(UUID id, Teacher updatedTeacher) {
-        Teacher teacher = findById(id);
+  @Transactional
+  public Teacher update(UUID id, Teacher updatedTeacher) {
+    Teacher teacher = findById(id);
 
-        teacher.setFirstName(updatedTeacher.getFirstName());
-        teacher.setLastName(updatedTeacher.getLastName());
-        teacher.setEmail(updatedTeacher.getEmail());
+    teacher.setFirstName(updatedTeacher.getFirstName());
+    teacher.setLastName(updatedTeacher.getLastName());
+    teacher.setEmail(updatedTeacher.getEmail());
 
-        return teacherRepository.save(teacher);
-    }
+    return teacherRepository.save(teacher);
+  }
 
-    @Transactional
-    public void delete(UUID id) {
-        Teacher teacher = findById(id);
-        teacherRepository.delete(teacher);
-    }
+  @Transactional
+  public void delete(UUID id) {
+    Teacher teacher = findById(id);
+    teacherRepository.delete(teacher);
+  }
 
-    public List<?> findCourses(UUID teacherId) {
-        Teacher teacher = findById(teacherId);
-        return teacher.getCourses();
-    }
+  public List<?> findCourses(UUID teacherId) {
+    Teacher teacher = findById(teacherId);
+    return teacher.getCourses();
+  }
 }

@@ -14,59 +14,59 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class StudentService {
 
-    private final StudentRepository studentRepository;
-    private final GroupRepository groupRepository;
+  private final StudentRepository studentRepository;
+  private final GroupRepository groupRepository;
 
-    public List<Student> findAll() {
-        return studentRepository.findAll();
-    }
+  public List<Student> findAll() {
+    return studentRepository.findAll();
+  }
 
-    public Student findById(UUID id) {
-        return studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found: " + id));
-    }
+  public Student findById(UUID id) {
+    return studentRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Student not found: " + id));
+  }
 
-    @Transactional
-    public Student create(Student student) {
-        return studentRepository.save(student);
-    }
+  @Transactional
+  public Student create(Student student) {
+    return studentRepository.save(student);
+  }
 
-    @Transactional
-    public Student update(UUID id, Student updatedStudent) {
-        Student student = findById(id);
+  @Transactional
+  public Student update(UUID id, Student updatedStudent) {
+    Student student = findById(id);
 
-        student.setRef(updatedStudent.getRef());
-        student.setFirstName(updatedStudent.getFirstName());
-        student.setLastName(updatedStudent.getLastName());
-        student.setEmail(updatedStudent.getEmail());
+    student.setRef(updatedStudent.getRef());
+    student.setFirstName(updatedStudent.getFirstName());
+    student.setLastName(updatedStudent.getLastName());
+    student.setEmail(updatedStudent.getEmail());
 
-        return studentRepository.save(student);
-    }
+    return studentRepository.save(student);
+  }
 
-    @Transactional
-    public void delete(UUID id) {
-        Student student = findById(id);
-        studentRepository.delete(student);
-    }
+  @Transactional
+  public void delete(UUID id) {
+    Student student = findById(id);
+    studentRepository.delete(student);
+  }
 
-    @Transactional
-    public Student changeGroup(UUID studentId, UUID groupId) {
-        Student student = findById(studentId);
+  @Transactional
+  public Student changeGroup(UUID studentId, UUID groupId) {
+    Student student = findById(studentId);
 
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+    Group group =
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
 
-        student.setGroup(group);
+    student.setGroup(group);
 
-        return studentRepository.save(student);
-    }
+    return studentRepository.save(student);
+  }
 
-    public List<Student> findByGroup(UUID groupId) {
-        return studentRepository.findAll()
-                .stream()
-                .filter(student ->
-                        student.getGroup() != null
-                                && student.getGroup().getId().equals(groupId))
-                .toList();
-    }
+  public List<Student> findByGroup(UUID groupId) {
+    return studentRepository.findAll().stream()
+        .filter(student -> student.getGroup() != null && student.getGroup().getId().equals(groupId))
+        .toList();
+  }
 }
