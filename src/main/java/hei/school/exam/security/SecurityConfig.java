@@ -37,8 +37,12 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/login", "/logout").permitAll()
-                    .requestMatchers("/ping").permitAll().anyRequest().authenticated())
+                auth.requestMatchers("/login", "/logout")
+                    .permitAll()
+                    .requestMatchers("/ping")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .formLogin(Customizer.withDefaults())
         .logout(Customizer.withDefaults());
     return http.build();

@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
