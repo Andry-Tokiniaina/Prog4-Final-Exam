@@ -1,4 +1,4 @@
-package hei.school.exam.endpoint.rest.controller.health;
+package hei.school.exam.endpoint.rest.controller;
 
 import hei.school.exam.endpoint.event.EventProducer;
 import hei.school.exam.endpoint.event.model.SendMailRequested;
