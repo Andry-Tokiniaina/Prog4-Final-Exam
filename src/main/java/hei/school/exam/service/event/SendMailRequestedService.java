@@ -13,19 +13,19 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class SendMailRequestedService implements Consumer<SendMailRequested> {
-    private final Mailer mailer;
+  private final Mailer mailer;
 
-    @SneakyThrows
-    @Override
-    public void accept(SendMailRequested sendEmailRequested) {
-        var recipientAddress = new InternetAddress(sendEmailRequested.getTo());
-        mailer.accept(
-                new Email(
-                        recipientAddress,
-                        List.of(),
-                        List.of(),
-                        "",
-                        "... world!",
-                        List.of())); //pièce jointe, ici ajouter le pdf
-    }
+  @SneakyThrows
+  @Override
+  public void accept(SendMailRequested sendEmailRequested) {
+    var recipientAddress = new InternetAddress(sendEmailRequested.getTo());
+    mailer.accept(
+        new Email(
+            recipientAddress,
+            List.of(),
+            List.of(),
+            "",
+            "... world!",
+            List.of())); // pièce jointe, ici ajouter le pdf
+  }
 }

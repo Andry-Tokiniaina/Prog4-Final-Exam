@@ -13,14 +13,15 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = false)
 @ToString
 public class SendMailRequested extends PojaEvent {
-    private String to;
-    @Override
-    public Duration maxConsumerDuration() {
-        return Duration.ofSeconds(20);
-    }
+  private String to;
 
-    @Override
-    public Duration maxConsumerBackoffBetweenRetries() {
-        return Duration.ofMinutes(1);
-    }
+  @Override
+  public Duration maxConsumerDuration() {
+    return Duration.ofSeconds(20);
+  }
+
+  @Override
+  public Duration maxConsumerBackoffBetweenRetries() {
+    return Duration.ofMinutes(1);
+  }
 }
