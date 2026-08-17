@@ -1,4 +1,4 @@
-package hei.school.exam.service;
+package hei.school.exam.service.security;
 
 import hei.school.exam.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
