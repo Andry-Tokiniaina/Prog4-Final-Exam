@@ -47,15 +47,15 @@ public class GradeService {
     return gradeRepository.save(grade);
   }
 
-  @Transactional
-  public Grade update(UUID id, double value) {
-    Grade grade = findById(id);
-
-    grade.setValue(value);
-    grade.setUpdatedAt(Instant.now());
-
-    return gradeRepository.save(grade);
-  }
+//  @Transactional
+//  public Grade update(UUID id, double value) {
+//    Grade grade = findById(id);
+//
+//    grade.setValue(value);
+//    grade.setUpdatedAt(Instant.now());
+//
+//    return gradeRepository.save(grade);
+//  }
 
   public List<Grade> findByStudent(UUID studentId) {
     return gradeRepository.findAll().stream()
