@@ -1,5 +1,6 @@
 package hei.school.exam.service.event;
 
+import hei.school.exam.entity.Course;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.repository.TeacherRepository;
 import java.util.List;
@@ -46,7 +47,7 @@ public class TeacherService {
     teacherRepository.delete(teacher);
   }
 
-  public List<?> findCourses(UUID teacherId) {
+  public List<Course> findCourses(UUID teacherId) {
     Teacher teacher = findById(teacherId);
     return teacher.getCourses();
   }
