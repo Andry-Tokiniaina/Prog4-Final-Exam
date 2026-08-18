@@ -15,52 +15,50 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ExcelService {
 
-    private final AverageService averageService;
+  private final AverageService averageService;
 
-    public byte[] generateGraduatesExcel(List<Student> students) {
+  public byte[] generateGraduatesExcel(List<Student> students) {
 
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+    try (Workbook workbook = new XSSFWorkbook();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            Sheet sheet = workbook.createSheet("Graduates");
+      Sheet sheet = workbook.createSheet("Graduates");
 
-            Row header = sheet.createRow(0);
+      Row header = sheet.createRow(0);
 
-            header.createCell(0).setCellValue("Rang");
-            header.createCell(1).setCellValue("STD");
-            header.createCell(2).setCellValue("Nom");
-            header.createCell(3).setCellValue("Prénom");
-            header.createCell(4).setCellValue("Moyenne");
+      header.createCell(0).setCellValue("Rang");
+      header.createCell(1).setCellValue("STD");
+      header.createCell(2).setCellValue("Nom");
+      header.createCell(3).setCellValue("Prénom");
+      header.createCell(4).setCellValue("Moyenne");
 
-            int rowIndex = 1;
+      int rowIndex = 1;
 
-            for (int i = 0; i < students.size(); i++) {
+      for (int i = 0; i < students.size(); i++) {
 
-                Student student = students.get(i);
+        Student student = students.get(i);
 
-                Row row = sheet.createRow(rowIndex++);
+        Row row = sheet.createRow(rowIndex++);
 
-                double average =
-                        averageService.calculateStudentAverage(student.getId());
+        double average = averageService.calculateStudentAverage(student.getId());
 
-                row.createCell(0).setCellValue(i + 1);
-                row.createCell(1).setCellValue(student.getRef());
-                row.createCell(2).setCellValue(student.getLastName());
-                row.createCell(3).setCellValue(student.getFirstName());
-                row.createCell(4).setCellValue(average);
-            }
+        row.createCell(0).setCellValue(i + 1);
+        row.createCell(1).setCellValue(student.getRef());
+        row.createCell(2).setCellValue(student.getLastName());
+        row.createCell(3).setCellValue(student.getFirstName());
+        row.createCell(4).setCellValue(average);
+      }
 
-            for (int i = 0; i < 5; i++) {
-                sheet.autoSizeColumn(i);
-            }
+      for (int i = 0; i < 5; i++) {
+        sheet.autoSizeColumn(i);
+      }
 
-            workbook.write(outputStream);
+      workbook.write(outputStream);
 
-            return outputStream.toByteArray();
+      return outputStream.toByteArray();
 
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Failed to generate graduates Excel file", e);
-        }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to generate graduates Excel file", e);
     }
+  }
 }

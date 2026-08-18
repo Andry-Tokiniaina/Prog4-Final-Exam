@@ -12,27 +12,24 @@ import org.thymeleaf.context.Context;
 @RequiredArgsConstructor
 public class PdfService {
 
-    private final TemplateEngine templateEngine;
+  private final TemplateEngine templateEngine;
 
-    public byte[] generateTranscriptPdf(Context context) {
+  public byte[] generateTranscriptPdf(Context context) {
 
-        String html = templateEngine.process("transcript", context);
+    String html = templateEngine.process("transcript", context);
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            PdfRendererBuilder builder = new PdfRendererBuilder();
+      PdfRendererBuilder builder = new PdfRendererBuilder();
 
-            builder
-                    .withHtmlContent(html, null)
-                    .toStream(outputStream)
-                    .useFastMode();
+      builder.withHtmlContent(html, null).toStream(outputStream).useFastMode();
 
-            builder.run();
+      builder.run();
 
-            return outputStream.toByteArray();
+      return outputStream.toByteArray();
 
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate PDF", e);
-        }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to generate PDF", e);
     }
+  }
 }
