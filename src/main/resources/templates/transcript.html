@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .student-info {
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #eeeeee;
+        }
+
+        .average {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>RELEVÉ DE NOTES</h1>
+
+<div class="student-info">
+
+    <p>
+        <strong>Nom :</strong>
+        <span th:text="${student.lastName}"></span>
+    </p>
+
+    <p>
+        <strong>Prénom :</strong>
+        <span th:text="${student.firstName}"></span>
+    </p>
+
+    <p>
+        <strong>Référence :</strong>
+        <span th:text="${student.ref}"></span>
+    </p>
+
+    <p>
+        <strong>Email :</strong>
+        <span th:text="${student.email}"></span>
+    </p>
+
+</div>
+
+<table>
+
+    <thead>
+    <tr>
+        <th>Cours</th>
+        <th>Examen</th>
+        <th>Date</th>
+        <th>Coefficient</th>
+        <th>Note</th>
+    </tr>
+    </thead>
+
+    <tbody>
+
+    <tr th:each="grade : ${grades}">
+
+        <td th:text="${grade.exam.course.title}">
+        </td>
+
+        <td>
+            Examen
+        </td>
+
+        <td th:text="${grade.exam.date}">
+        </td>
+
+        <td th:text="${grade.exam.coefficient}">
+        </td>
+
+        <td th:text="${grade.value}">
+        </td>
+
+    </tr>
+
+    </tbody>
+
+</table>
+
+<div class="average">
+
+    Moyenne générale :
+    <span th:text="${average}"></span>
+
+</div>
+
+</body>
+</html>
