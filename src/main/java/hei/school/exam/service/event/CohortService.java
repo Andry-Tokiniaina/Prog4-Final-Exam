@@ -11,14 +11,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CohortService {
 
-    private final CohortRepository cohortRepository;
+  private final CohortRepository cohortRepository;
 
-    public List<Cohort> findAll() {
-        return cohortRepository.findAll();
-    }
+  public List<Cohort> findAll() {
+    return cohortRepository.findAll();
+  }
 
-    public Cohort findById(UUID id) {
-        return cohortRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cohort not found: " + id));
-    }
+  public Cohort findById(UUID id) {
+    return cohortRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Cohort not found: " + id));
+  }
 }

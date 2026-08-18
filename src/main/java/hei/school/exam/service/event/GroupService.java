@@ -27,8 +27,9 @@ public class GroupService {
   }
 
   public Group findById(UUID id) {
-    return groupRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Group not found: " + id));
+    return groupRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Group not found: " + id));
   }
 
   @Transactional
@@ -62,9 +63,10 @@ public class GroupService {
   public Group assignCohort(UUID groupId, UUID cohortId) {
     Group group = findById(groupId);
 
-    Cohort cohort = cohortRepository.findById(cohortId)
-            .orElseThrow(() ->
-                    new RuntimeException("Cohort not found: " + cohortId));
+    Cohort cohort =
+        cohortRepository
+            .findById(cohortId)
+            .orElseThrow(() -> new RuntimeException("Cohort not found: " + cohortId));
 
     group.setCohort(cohort);
 
@@ -75,9 +77,10 @@ public class GroupService {
   public Group assignTrack(UUID groupId, UUID trackId) {
     Group group = findById(groupId);
 
-    Track track = trackRepository.findById(trackId)
-            .orElseThrow(() ->
-                    new RuntimeException("Track not found: " + trackId));
+    Track track =
+        trackRepository
+            .findById(trackId)
+            .orElseThrow(() -> new RuntimeException("Track not found: " + trackId));
 
     group.setTrack(track);
 

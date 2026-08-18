@@ -12,34 +12,35 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TrackService {
 
-    private final TrackRepository trackRepository;
+  private final TrackRepository trackRepository;
 
-    public List<Track> findAll() {
-        return trackRepository.findAll();
-    }
+  public List<Track> findAll() {
+    return trackRepository.findAll();
+  }
 
-    public Track findById(UUID id) {
-        return trackRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Track not found: " + id));
-    }
+  public Track findById(UUID id) {
+    return trackRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Track not found: " + id));
+  }
 
-    @Transactional
-    public Track create(Track track) {
-        return trackRepository.save(track);
-    }
+  @Transactional
+  public Track create(Track track) {
+    return trackRepository.save(track);
+  }
 
-    @Transactional
-    public Track update(UUID id, Track updatedTrack) {
-        Track track = findById(id);
+  @Transactional
+  public Track update(UUID id, Track updatedTrack) {
+    Track track = findById(id);
 
-        track.setName(updatedTrack.getName());
+    track.setName(updatedTrack.getName());
 
-        return trackRepository.save(track);
-    }
+    return trackRepository.save(track);
+  }
 
-    @Transactional
-    public void delete(UUID id) {
-        Track track = findById(id);
-        trackRepository.delete(track);
-    }
+  @Transactional
+  public void delete(UUID id) {
+    Track track = findById(id);
+    trackRepository.delete(track);
+  }
 }
