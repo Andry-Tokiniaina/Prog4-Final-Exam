@@ -82,6 +82,7 @@ public final class DtoMapper {
   }
 
   public static CohortDto toDto(Cohort cohort) {
-    return new CohortDto(cohort.getId(), cohort.getName(), cohort.getStartDate(), cohort.getEndDate());
+    return new CohortDto(
+        cohort.getId(), cohort.getName(), cohort.getStartDate(), cohort.getEndDate());
   }
 }
