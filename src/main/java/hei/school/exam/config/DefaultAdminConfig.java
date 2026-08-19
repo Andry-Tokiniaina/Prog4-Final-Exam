@@ -12,22 +12,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class DefaultAdminConfig {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    ApplicationRunner createDefaultAdmin() {
-        return args -> {
-            if (userRepository.findByEmail("admin@hei.school").isEmpty()) {
-                Admin admin =
-                        Admin.builder()
-                                .firstName("Default")
-                                .lastName("Admin")
-                                .email("admin@hei.school")
-                                .password(passwordEncoder.encode("admin"))
-                                .build();
-                userRepository.save(admin);
-            }
-        };
-    }
+  @Bean
+  ApplicationRunner createDefaultAdmin() {
+    return args -> {
+      if (userRepository.findByEmail("admin@hei.school").isEmpty()) {
+        Admin admin =
+            Admin.builder()
+                .firstName("Default")
+                .lastName("Admin")
+                .email("admin@hei.school")
+                .password(passwordEncoder.encode("admin"))
+                .build();
+        userRepository.save(admin);
+      }
+    };
+  }
 }

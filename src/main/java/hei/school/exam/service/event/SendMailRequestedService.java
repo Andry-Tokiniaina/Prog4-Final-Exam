@@ -24,17 +24,17 @@ public class SendMailRequestedService implements Consumer<SendMailRequested> {
     var recipientAddress = new InternetAddress(sendEmailRequested.getTo());
 
     List<File> attachments =
-            sendEmailRequested.getAttachmentBucketKey() == null
-                    ? List.of()
-                    : List.of(bucketComponent.download(sendEmailRequested.getAttachmentBucketKey()));
+        sendEmailRequested.getAttachmentBucketKey() == null
+            ? List.of()
+            : List.of(bucketComponent.download(sendEmailRequested.getAttachmentBucketKey()));
 
     mailer.accept(
-            new Email(
-                    recipientAddress,
-                    List.of(),
-                    List.of(),
-                    sendEmailRequested.getSubject() == null ? "" : sendEmailRequested.getSubject(),
-                    sendEmailRequested.getHtmlBody() == null ? "" : sendEmailRequested.getHtmlBody(),
-                    attachments));
+        new Email(
+            recipientAddress,
+            List.of(),
+            List.of(),
+            sendEmailRequested.getSubject() == null ? "" : sendEmailRequested.getSubject(),
+            sendEmailRequested.getHtmlBody() == null ? "" : sendEmailRequested.getHtmlBody(),
+            attachments));
   }
 }
