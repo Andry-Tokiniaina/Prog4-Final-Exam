@@ -11,20 +11,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Table(
-        name = "track_semester_course",
-        uniqueConstraints =
-        @UniqueConstraint(columnNames = {"track_id", "semester_id", "course_id"}))
+    name = "track_semester_course",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"track_id", "semester_id", "course_id"}))
 public class TrackSemesterCourse {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne(optional = false)
-    private Track track;
+  @ManyToOne(optional = false)
+  private Track track;
 
-    @ManyToOne(optional = false)
-    private Semester semester;
+  @ManyToOne(optional = false)
+  private Semester semester;
 
-    @ManyToOne(optional = false)
-    private Course course;
+  @ManyToOne(optional = false)
+  private Course course;
 }

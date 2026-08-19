@@ -17,9 +17,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @DiscriminatorValue("TEACHER")
 public class Teacher extends User {
-  @ManyToMany
-  @lombok.ToString.Exclude
-  @lombok.EqualsAndHashCode.Exclude
+  @ManyToMany @lombok.ToString.Exclude @lombok.EqualsAndHashCode.Exclude
   private List<Course> courses;
 
   @Override

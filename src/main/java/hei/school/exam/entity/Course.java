@@ -25,8 +25,5 @@ public class Course {
   @lombok.EqualsAndHashCode.Exclude
   private List<Teacher> teachers;
 
-  @ManyToMany
-  @lombok.ToString.Exclude
-  @lombok.EqualsAndHashCode.Exclude
-  private List<Group> groups;
+  @ManyToMany @lombok.ToString.Exclude @lombok.EqualsAndHashCode.Exclude private List<Group> groups;
 }

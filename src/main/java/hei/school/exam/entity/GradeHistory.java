@@ -12,20 +12,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class GradeHistory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne(optional = false)
-    private Grade grade;
+  @ManyToOne(optional = false)
+  private Grade grade;
 
-    private double previousValue;
-    private double newValue;
+  private double previousValue;
+  private double newValue;
 
-    @Column(length = 1000)
-    private String reason;
+  @Column(length = 1000)
+  private String reason;
 
-    @ManyToOne private User changedBy;
+  @ManyToOne private User changedBy;
 
-    private Instant changedAt;
+  private Instant changedAt;
 }
