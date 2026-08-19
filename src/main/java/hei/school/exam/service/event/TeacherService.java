@@ -5,7 +5,6 @@ import hei.school.exam.dto.TeacherUpdateInput;
 import hei.school.exam.entity.Course;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.repository.TeacherRepository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
