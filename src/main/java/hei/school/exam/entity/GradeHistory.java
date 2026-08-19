@@ -1,23 +1,31 @@
 package hei.school.exam.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Entity
-public class Exam {
+public class GradeHistory {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double coefficient;
-  private LocalDate date;
+  @ManyToOne(optional = false)
+  private Grade grade;
 
-  @ManyToOne private Course course;
+  private double previousValue;
+  private double newValue;
+
+  @Column(length = 1000)
+  private String reason;
+
+  @ManyToOne private User changedBy;
+
+  private Instant changedAt;
 }

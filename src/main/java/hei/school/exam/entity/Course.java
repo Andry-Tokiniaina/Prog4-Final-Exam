@@ -21,5 +21,9 @@ public class Course {
   private int credit;
 
   @ManyToMany(cascade = CascadeType.ALL)
+  @lombok.ToString.Exclude
+  @lombok.EqualsAndHashCode.Exclude
   private List<Teacher> teachers;
+
+  @ManyToMany @lombok.ToString.Exclude @lombok.EqualsAndHashCode.Exclude private List<Group> groups;
 }
