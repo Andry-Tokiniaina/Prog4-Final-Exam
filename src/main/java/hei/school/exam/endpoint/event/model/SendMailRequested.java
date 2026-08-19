@@ -14,6 +14,11 @@ import lombok.ToString;
 @ToString
 public class SendMailRequested extends PojaEvent {
   private String to;
+  private String subject;
+  private String htmlBody;
+
+  /** S3 key of a file (e.g. a PDF transcript) to attach to the email, or null. */
+  private String attachmentBucketKey;
 
   @Override
   public Duration maxConsumerDuration() {
