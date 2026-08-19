@@ -16,7 +16,7 @@ public class Exam {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private int coefficient;
+  private double coefficient;
   private LocalDate date;
 
   @ManyToOne private Course course;

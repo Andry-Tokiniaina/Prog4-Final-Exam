@@ -13,11 +13,14 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Data
 @DiscriminatorValue("TEACHER")
 public class Teacher extends User {
-  @ManyToMany private List<Course> courses;
+  @ManyToMany
+  @lombok.ToString.Exclude
+  @lombok.EqualsAndHashCode.Exclude
+  private List<Course> courses;
 
   @Override
   public Role getRole() {
