@@ -21,44 +21,44 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class CohortController {
 
-    private final CohortService cohortService;
-    private final GraduateExportService graduateExportService;
+  private final CohortService cohortService;
+  private final GraduateExportService graduateExportService;
 
-    @GetMapping("/cohorts")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<CohortDto> list() {
-        return cohortService.findAll().stream().map(DtoMapper::toDto).toList();
-    }
+  @GetMapping("/cohorts")
+  @PreAuthorize("hasRole('ADMIN')")
+  public List<CohortDto> list() {
+    return cohortService.findAll().stream().map(DtoMapper::toDto).toList();
+  }
 
-    @GetMapping("/cohorts/{cohortId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public CohortDto get(@PathVariable UUID cohortId) {
-        return DtoMapper.toDto(cohortService.findById(cohortId));
-    }
+  @GetMapping("/cohorts/{cohortId}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public CohortDto get(@PathVariable UUID cohortId) {
+    return DtoMapper.toDto(cohortService.findById(cohortId));
+  }
 
-    @GetMapping("/cohorts/{cohortId}/results")
-    @PreAuthorize("hasRole('ADMIN')")
-    public CohortResultsDto results(@PathVariable UUID cohortId) {
-        return cohortService.computeResults(cohortId);
-    }
+  @GetMapping("/cohorts/{cohortId}/results")
+  @PreAuthorize("hasRole('ADMIN')")
+  public CohortResultsDto results(@PathVariable UUID cohortId) {
+    return cohortService.computeResults(cohortId);
+  }
 
-    @GetMapping("/cohorts/{cohortId}/graduates")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<GraduateEntryDto> graduates(@PathVariable UUID cohortId) {
-        return cohortService.findGraduates(cohortId);
-    }
+  @GetMapping("/cohorts/{cohortId}/graduates")
+  @PreAuthorize("hasRole('ADMIN')")
+  public List<GraduateEntryDto> graduates(@PathVariable UUID cohortId) {
+    return cohortService.findGraduates(cohortId);
+  }
 
-    @GetMapping("/cohorts/{cohortId}/graduates/export")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<byte[]> exportGraduates(@PathVariable UUID cohortId) {
-        byte[] excel = graduateExportService.generateAndPersist(cohortId);
-        return ResponseEntity.ok()
-                .contentType(
-                        MediaType.parseMediaType(
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"graduates-" + cohortId + ".xlsx\"")
-                .body(excel);
-    }
+  @GetMapping("/cohorts/{cohortId}/graduates/export")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<byte[]> exportGraduates(@PathVariable UUID cohortId) {
+    byte[] excel = graduateExportService.generateAndPersist(cohortId);
+    return ResponseEntity.ok()
+        .contentType(
+            MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=\"graduates-" + cohortId + ".xlsx\"")
+        .body(excel);
+  }
 }

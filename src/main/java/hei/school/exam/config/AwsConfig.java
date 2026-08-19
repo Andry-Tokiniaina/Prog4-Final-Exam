@@ -11,22 +11,22 @@ import software.amazon.awssdk.services.ses.SesClient;
 @Configuration
 public class AwsConfig {
 
-    @Value("${app.aws.region:eu-west-1}")
-    private String region;
+  @Value("${app.aws.region:eu-west-1}")
+  private String region;
 
-    @Bean
-    public S3Client s3Client() {
-        return S3Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
-    }
+  @Bean
+  public S3Client s3Client() {
+    return S3Client.builder()
+        .region(Region.of(region))
+        .credentialsProvider(DefaultCredentialsProvider.create())
+        .build();
+  }
 
-    @Bean
-    public SesClient sesClient() {
-        return SesClient.builder()
-                .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
-    }
+  @Bean
+  public SesClient sesClient() {
+    return SesClient.builder()
+        .region(Region.of(region))
+        .credentialsProvider(DefaultCredentialsProvider.create())
+        .build();
+  }
 }

@@ -30,8 +30,8 @@ public class CohortService {
 
   public Cohort findById(UUID id) {
     return cohortRepository
-            .findById(id)
-            .orElseThrow(() -> new RuntimeException("Cohort not found: " + id));
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Cohort not found: " + id));
   }
 
   public CohortResultsDto computeResults(UUID cohortId) {
@@ -42,13 +42,12 @@ public class CohortService {
 
     long graduatedCount = averages.stream().filter(avg -> avg >= GRADUATION_THRESHOLD).count();
 
-    double overallAverage =
-            averages.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+    double overallAverage = averages.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 
     // Cohort n'a qu'une seule startDate -> une seule entrée dans la liste.
     int year = cohort.getStartDate().getYear();
     List<CohortResultsDto.YearAverage> averageByYear =
-            List.of(new CohortResultsDto.YearAverage(year, overallAverage));
+        List.of(new CohortResultsDto.YearAverage(year, overallAverage));
 
     return new CohortResultsDto(cohortId, averageByYear, graduatedCount, students.size());
   }
@@ -57,33 +56,33 @@ public class CohortService {
     List<Student> students = findStudentsInCohort(cohortId);
 
     List<Student> graduated =
-            students.stream()
-                    .filter(student -> calculateAverage(student) >= GRADUATION_THRESHOLD)
-                    .sorted(Comparator.comparingDouble(this::calculateAverage).reversed())
-                    .toList();
+        students.stream()
+            .filter(student -> calculateAverage(student) >= GRADUATION_THRESHOLD)
+            .sorted(Comparator.comparingDouble(this::calculateAverage).reversed())
+            .toList();
 
     List<GraduateEntryDto> result = new ArrayList<>();
     int rank = 1;
     for (Student student : graduated) {
       result.add(
-              new GraduateEntryDto(
-                      rank++,
-                      student.getRef(),
-                      student.getLastName(),
-                      student.getFirstName(),
-                      calculateAverage(student)));
+          new GraduateEntryDto(
+              rank++,
+              student.getRef(),
+              student.getLastName(),
+              student.getFirstName(),
+              calculateAverage(student)));
     }
     return result;
   }
 
   private List<Student> findStudentsInCohort(UUID cohortId) {
     return studentRepository.findAll().stream()
-            .filter(
-                    student ->
-                            student.getGroup() != null
-                                    && student.getGroup().getCohort() != null
-                                    && student.getGroup().getCohort().getId().equals(cohortId))
-            .toList();
+        .filter(
+            student ->
+                student.getGroup() != null
+                    && student.getGroup().getCohort() != null
+                    && student.getGroup().getCohort().getId().equals(cohortId))
+        .toList();
   }
 
   private double calculateAverage(Student student) {

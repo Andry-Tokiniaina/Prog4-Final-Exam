@@ -27,21 +27,19 @@ public class GradeService {
 
   public Grade findById(UUID id) {
     return gradeRepository
-            .findById(id)
-            .orElseThrow(() -> new RuntimeException("Grade not found: " + id));
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Grade not found: " + id));
   }
 
   @Transactional
   public Grade create(UUID studentId, UUID examId, double value) {
     Student student =
-            studentRepository
-                    .findById(studentId)
-                    .orElseThrow(() -> new RuntimeException("Student not found"));
+        studentRepository
+            .findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
 
     Exam exam =
-            examRepository
-                    .findById(examId)
-                    .orElseThrow(() -> new RuntimeException("Exam not found"));
+        examRepository.findById(examId).orElseThrow(() -> new RuntimeException("Exam not found"));
 
     Grade grade = new Grade();
     grade.setStudent(student);
@@ -62,7 +60,7 @@ public class GradeService {
     Grade saved = gradeRepository.save(grade);
 
     GradeHistory history =
-            new GradeHistory(null, saved, previousValue, value, reason, changedBy, Instant.now());
+        new GradeHistory(null, saved, previousValue, value, reason, changedBy, Instant.now());
     gradeHistoryRepository.save(history);
 
     return saved;
@@ -74,23 +72,23 @@ public class GradeService {
 
   public List<Grade> findByStudent(UUID studentId) {
     return gradeRepository.findAll().stream()
-            .filter(grade -> grade.getStudent() != null && grade.getStudent().getId().equals(studentId))
-            .toList();
+        .filter(grade -> grade.getStudent() != null && grade.getStudent().getId().equals(studentId))
+        .toList();
   }
 
   public List<Grade> findByExam(UUID examId) {
     return gradeRepository.findAll().stream()
-            .filter(grade -> grade.getExam() != null && grade.getExam().getId().equals(examId))
-            .toList();
+        .filter(grade -> grade.getExam() != null && grade.getExam().getId().equals(examId))
+        .toList();
   }
 
   public List<Grade> findByCourse(UUID courseId) {
     return gradeRepository.findAll().stream()
-            .filter(
-                    grade ->
-                            grade.getExam() != null
-                                    && grade.getExam().getCourse() != null
-                                    && grade.getExam().getCourse().getId().equals(courseId))
-            .toList();
+        .filter(
+            grade ->
+                grade.getExam() != null
+                    && grade.getExam().getCourse() != null
+                    && grade.getExam().getCourse().getId().equals(courseId))
+        .toList();
   }
 }

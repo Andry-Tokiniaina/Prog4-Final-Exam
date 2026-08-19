@@ -2,7 +2,14 @@ package hei.school.exam.service.event;
 
 import hei.school.exam.entity.Grade;
 import hei.school.exam.entity.Student;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,14 +18,6 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.RawMessage;
 import software.amazon.awssdk.services.ses.model.SendRawEmailRequest;
-
-import jakarta.mail.Session;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.util.ByteArrayDataSource;
-import java.io.ByteArrayOutputStream;
-import java.util.Properties;
 
 @Service
 @RequiredArgsConstructor
@@ -67,8 +66,7 @@ public class TranscriptService {
 
       MimeBodyPart attachmentPart = new MimeBodyPart();
       attachmentPart.setDataHandler(
-              new jakarta.activation.DataHandler(
-                      new ByteArrayDataSource(pdf, "application/pdf")));
+          new jakarta.activation.DataHandler(new ByteArrayDataSource(pdf, "application/pdf")));
       attachmentPart.setFileName("transcript.pdf");
       multipart.addBodyPart(attachmentPart);
 
@@ -78,12 +76,12 @@ public class TranscriptService {
       mimeMessage.writeTo(outputStream);
 
       SendRawEmailRequest rawEmailRequest =
-              SendRawEmailRequest.builder()
-                      .rawMessage(
-                              RawMessage.builder()
-                                      .data(SdkBytes.fromByteArray(outputStream.toByteArray()))
-                                      .build())
-                      .build();
+          SendRawEmailRequest.builder()
+              .rawMessage(
+                  RawMessage.builder()
+                      .data(SdkBytes.fromByteArray(outputStream.toByteArray()))
+                      .build())
+              .build();
 
       sesClient.sendRawEmail(rawEmailRequest);
 
