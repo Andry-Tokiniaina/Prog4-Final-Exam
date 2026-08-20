@@ -1,4 +1,4 @@
-# Prog4 - Examen (guide pour le correcteur)
+# Prog4 - Examen Final - STD24094 STD24051
 
 Ce dépôt contient le projet de l'examen final. Ce document indique comment tester l'application, en particulier l'authentification, les comptes fournis et le cas de test pour l'envoi du relevé de notes.
 
@@ -12,37 +12,26 @@ Ce README est destiné au correcteur. Il décrit rapidement :
 ## Authentification
 - Route d'authentification : POST /login
 - Corps attendu (JSON) : { "username": "<votre-username>", "password": "<votre-password>" }
-- Réponse : un token (JWT ou équivalent) est renvoyé dans le corps.
+- Réponse : un token (JWT) est renvoyé dans le corps.
 - Utilisation du token : Ajoutez une entête HTTP `Authorization` dans toutes les requêtes protégées :
   Authorization: Bearer <token>
 
-Remarque : je fournirai moi-même le(s) username et password pour les comptes d'administration, ainsi que les mots de passe partagés pour teachers et students (voir section suivante).
-
 ## Comptes et mots de passe
-- Il n'y a qu'un seul compte administrateur (admin). Je fournirai l'username et le password de ce compte.
-- Tous les comptes teacher partagent le même mot de passe (je fournirai ce mot de passe).
+- Il n'y a qu'un seul compte admin avec username: admin@hei.school, password: admin.
+- Tous les comptes teacher partagent le même mot de passe (Teacher123!).
   Exemples d'usernames teacher (exemples à titre indicatif) :
-  - teacher1
-  - professeur.dupont
-- Tous les comptes student partagent le même mot de passe (je fournirai ce mot de passe).
+  - hery.rakotomalala@hei.school
+  - voahangy.randrianasolo@hei.school
+  - tovo.rabemananjara@hei.school
+- Tous les comptes student partagent le même mot de passe (Student123!).
   Exemples d'usernames student (exemples à titre indicatif) :
-  - student1
-  - etudiant.durand
-
-Vous renseignerez vous-même les credentials exacts (usernames et passwords) lors de l'évaluation.
+  - baholy.rabemananjara@student.hei.school
+  - faniry.andriantsoa@student.hei.school
+  - sitraka.rakotoson@student.hei.school
 
 ## Cas de test pour l'envoi du relevé de notes (mail)
-- Nous avons pré-préparé un compte student contenant des données de test et une adresse e-mail valide afin que vous puissiez tester l'envoi du relevé de notes.
-- L'endpoint exact à appeler pour déclencher l'envoi du mail (URL complète, méthode et payload) sera fourni par moi-même — je renseignerai l'endpoint à utiliser dans ce README si nécessaire.
-- Utilisez le compte student de test et vérifiez la boîte mail associée pour confirmer la réception du relevé.
+- Nous avons pré-préparé un compte student contenant des données de test et votre adresse e-mail (toky@mail.hei.school) afin que vous puissiez tester l'envoi du relevé de notes.
+- L'endpoint exact à appeler pour déclencher l'envoi du mail : /students/me/transcript
+- Le header complet lié à ce user : Autorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2t5QG1haWwuaGVpLnNjaG9vbCIsImlhdCI6MTc4NzI0NzAwMSwiZXhwIjoxNzg5ODM5MDAxfQ.4DRUPXjne9eH01EpIpy2u2q-j1km5h0uyb0I5TSDYBjk_ESMUrhrk-YDXPLfC0AUlvHRaHLgbHnOulVP0xabNA
 
-## Démarrage et tests
-1. Démarrer l'application selon les instructions habituelles du projet (ex : `mvn spring-boot:run` ou autre script fourni).
-2. Appeler POST /login avec un couple username/password valide.
-3. Récupérer le token et l'utiliser dans l'entête `Authorization` lors des autres appels.
-4. Tester les éléments métiers (création/lecture/édition) avec les comptes teacher/student selon les besoins.
-5. Tester l'envoi du mail de relevé de notes en utilisant le student de test préparé.
-
-## Remarques finales pour le correcteur
-- Les credentials (usernames et mots de passe) vous seront fournis séparément par l'auteur du projet.
-- N'hésitez pas à me dire si vous voulez que j'ajoute ici les endpoints précis (je les ajouterai si vous me les fournissez).
+N.B: nous avons mis une durée de vie de 30 jours aux token pour être sûr que ce token serait encore valide pendant la correction
