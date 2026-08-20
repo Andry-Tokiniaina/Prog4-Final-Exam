@@ -38,6 +38,7 @@ public class CohortService {
   private final StudentRepository studentRepository;
   private final GradeRepository gradeRepository;
   private final TrackSemesterCourseRepository trackSemesterCourseRepository;
+  private final StudentService studentService;
 
   public List<Cohort> findAll() {
     return cohortRepository.findAll();
@@ -114,6 +115,13 @@ public class CohortService {
       }
     }
     return true;
+  }
+
+  public List<Student> findNonGraduates(UUID cohortId) {
+    findById(cohortId);
+    return studentsOfCohort(cohortId).stream()
+        .filter(s -> !studentService.hasDiploma(s.getId()))
+        .toList();
   }
 
   public List<GraduateEntryDto> findGraduates(UUID cohortId) {

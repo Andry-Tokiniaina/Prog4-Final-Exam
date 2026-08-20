@@ -8,7 +8,9 @@ import hei.school.exam.file.bucket.BucketComponent;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -70,26 +72,32 @@ public class TranscriptService {
   }
 
   private double calculateAverage(List<Grade> grades) {
+    if (grades.isEmpty()) return 0;
 
-    if (grades.isEmpty()) {
-      return 0;
-    }
+    // Une note de cours peut avoir plusieurs examens :
+    // on calcule d'abord la moyenne pondérée de chaque cours.
+    Map<UUID, List<Grade>> byCourse =
+        grades.stream()
+            .filter(g -> g.getExam() != null && g.getExam().getCourse() != null)
+            .collect(Collectors.groupingBy(g -> g.getExam().getCourse().getId()));
 
     double weightedSum = 0;
-    double coefficients = 0;
+    int totalCredits = 0;
 
-    for (Grade grade : grades) {
+    for (List<Grade> courseGrades : byCourse.values()) {
+      double totalCoefficient =
+          courseGrades.stream().mapToDouble(g -> g.getExam().getCoefficient()).sum();
+      if (totalCoefficient == 0) continue;
 
-      double coefficient = grade.getExam().getCoefficient();
+      double courseAverage =
+          courseGrades.stream().mapToDouble(g -> g.getValue() * g.getExam().getCoefficient()).sum()
+              / totalCoefficient;
 
-      weightedSum += grade.getValue() * coefficient;
-      coefficients += coefficient;
+      int credits = courseGrades.get(0).getExam().getCourse().getCredit();
+      weightedSum += courseAverage * credits;
+      totalCredits += credits;
     }
 
-    if (coefficients == 0) {
-      return 0;
-    }
-
-    return weightedSum / coefficients;
+    return totalCredits == 0 ? 0 : weightedSum / totalCredits;
   }
 }

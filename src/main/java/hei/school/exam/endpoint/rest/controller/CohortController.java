@@ -4,6 +4,7 @@ import hei.school.exam.dto.CohortDto;
 import hei.school.exam.dto.CohortResultsDto;
 import hei.school.exam.dto.DtoMapper;
 import hei.school.exam.dto.GraduateEntryDto;
+import hei.school.exam.dto.StudentDto;
 import hei.school.exam.service.event.CohortService;
 import hei.school.exam.service.event.GraduateExportService;
 import java.util.List;
@@ -40,6 +41,12 @@ public class CohortController {
   @PreAuthorize("hasRole('ADMIN')")
   public CohortResultsDto results(@PathVariable UUID cohortId) {
     return cohortService.computeResults(cohortId);
+  }
+
+  @GetMapping("/cohorts/{cohortId}/non-graduates")
+  @PreAuthorize("hasRole('ADMIN')")
+  public List<StudentDto> nonGraduates(@PathVariable UUID cohortId) {
+    return cohortService.findNonGraduates(cohortId).stream().map(DtoMapper::toDto).toList();
   }
 
   @GetMapping("/cohorts/{cohortId}/graduates")
