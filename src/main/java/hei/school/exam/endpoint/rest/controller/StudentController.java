@@ -3,34 +3,25 @@ package hei.school.exam.endpoint.rest.controller;
 import hei.school.exam.dto.DtoMapper;
 import hei.school.exam.dto.StudentDto;
 import hei.school.exam.dto.StudentInput;
+import hei.school.exam.dto.StudentUpdateInput;
 import hei.school.exam.dto.TranscriptRequestAcceptedDto;
-import hei.school.exam.entity.Group;
 import hei.school.exam.entity.Student;
-import hei.school.exam.entity.Teacher;
-import hei.school.exam.entity.User;
-import hei.school.exam.service.event.CourseService;
 import hei.school.exam.service.event.StudentService;
 import hei.school.exam.service.event.TranscriptService;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 public class StudentController {
-
   private final StudentService studentService;
-  private final CourseService courseService;
   private final TranscriptService transcriptService;
-  private final PasswordEncoder passwordEncoder;
-
-  // ---------- self-service ----------
 
   @GetMapping("/students/me")
   @PreAuthorize("hasRole('STUDENT')")
@@ -47,8 +38,6 @@ public class StudentController {
     return new TranscriptRequestAcceptedDto("The transcript will be sent by email shortly.");
   }
 
-  // ---------- admin/teacher management ----------
-
   @GetMapping("/students")
   @PreAuthorize("hasRole('ADMIN')")
   public List<StudentDto> list(
@@ -63,26 +52,22 @@ public class StudentController {
   @PostMapping("/students")
   @PreAuthorize("hasRole('ADMIN')")
   @ResponseStatus(HttpStatus.CREATED)
-  public StudentDto create(@RequestBody StudentInput input) {
-    Student student = toEntity(input);
-    return DtoMapper.toDto(studentService.create(student));
+  public StudentDto create(@Valid @RequestBody StudentInput input) {
+    return DtoMapper.toDto(studentService.create(input));
   }
 
   @GetMapping("/students/{studentId}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-  public StudentDto get(@PathVariable UUID studentId, @AuthenticationPrincipal User principal) {
-    Student student = studentService.findById(studentId);
-    if (principal instanceof Teacher teacher) {
-      requireTeacherTeachesStudent(teacher, student);
-    }
-    return DtoMapper.toDto(student);
+  public StudentDto get(
+      @PathVariable UUID studentId,
+      @AuthenticationPrincipal hei.school.exam.entity.User principal) {
+    return DtoMapper.toDto(studentService.getForUser(studentId, principal));
   }
 
   @PutMapping("/students/{studentId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public StudentDto update(@PathVariable UUID studentId, @RequestBody StudentInput input) {
-    Student updated = toEntity(input);
-    return DtoMapper.toDto(studentService.update(studentId, updated));
+  public StudentDto update(@PathVariable UUID studentId, @RequestBody StudentUpdateInput input) {
+    return DtoMapper.toDto(studentService.update(studentId, input));
   }
 
   @DeleteMapping("/students/{studentId}")
@@ -108,43 +93,9 @@ public class StudentController {
 
   public record GroupIdBody(UUID groupId) {}
 
-  private Student toEntity(StudentInput input) {
-    String password =
-        input.password() == null || input.password().isBlank()
-            ? passwordEncoder.encode("hei-" + UUID.randomUUID().toString().substring(0, 8))
-            : passwordEncoder.encode(input.password());
-
-    Student student =
-        Student.builder()
-            .ref(input.std())
-            .firstName(input.firstName())
-            .lastName(input.lastName())
-            .email(input.email())
-            .password(password)
-            .build();
-
-    if (input.groupId() != null) {
-      Group group = new Group();
-      group.setId(input.groupId());
-      student.setGroup(group);
-    }
-    return student;
-  }
-
-  private void requireTeacherTeachesStudent(Teacher teacher, Student student) {
-    if (student.getGroup() == null) {
-      throw new AccessDeniedException("Student is not in any group taught by this teacher");
-    }
-    boolean teaches =
-        courseService.findAll().stream()
-            .anyMatch(
-                course ->
-                    course.getTeachers() != null
-                        && course.getTeachers().contains(teacher)
-                        && course.getGroups() != null
-                        && course.getGroups().contains(student.getGroup()));
-    if (!teaches) {
-      throw new AccessDeniedException("Teacher does not teach this student");
-    }
+  @GetMapping("/students/{studentId}/diploma")
+  @PreAuthorize("hasRole('ADMIN')")
+  public boolean diploma(@PathVariable UUID studentId) {
+    return studentService.hasDiploma(studentId);
   }
 }
