@@ -20,7 +20,7 @@ public class Course {
   private String title;
   private int credit;
 
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany
   @lombok.ToString.Exclude
   @lombok.EqualsAndHashCode.Exclude
   private List<Teacher> teachers;
