@@ -166,7 +166,6 @@ public class StudentService {
             });
   }
 
-
   @Transactional
   public void delete(UUID id) {
     studentRepository.delete(findById(id));
@@ -176,16 +175,16 @@ public class StudentService {
   public Student changeGroup(UUID studentId, UUID groupId) {
     Student student = findById(studentId);
     Group group =
-            groupRepository
-                .findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
     student.setGroup(group);
     return studentRepository.save(student);
   }
 
   public List<Student> findByGroup(UUID groupId) {
     return studentRepository.findAll().stream()
-            .filter(s -> s.getGroup() != null && s.getGroup().getId().equals(groupId))
-            .toList();
+        .filter(s -> s.getGroup() != null && s.getGroup().getId().equals(groupId))
+        .toList();
   }
 }
