@@ -19,8 +19,9 @@ public class GraduateExportService {
   private final BucketComponent bucketComponent;
 
   /**
-   * Generates the XLSX graduate list, uploads it to S3 (bucket key "exports/graduates-{cohortId}.xlsx")
-   * and returns the bytes so the controller can stream it back directly (no email involved).
+   * Generates the XLSX graduate list, uploads it to S3 (bucket key
+   * "exports/graduates-{cohortId}.xlsx") and returns the bytes so the controller can stream it back
+   * directly (no email involved).
    */
   @SneakyThrows
   public byte[] generateAndPersist(UUID cohortId) {

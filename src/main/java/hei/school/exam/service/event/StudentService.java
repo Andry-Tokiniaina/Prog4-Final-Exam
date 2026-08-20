@@ -19,7 +19,8 @@ public class StudentService {
 
   public List<Student> findAll(UUID cohortId, UUID groupId, UUID trackId) {
     return studentRepository.findAll().stream()
-        .filter(s -> groupId == null || (s.getGroup() != null && groupId.equals(s.getGroup().getId())))
+        .filter(
+            s -> groupId == null || (s.getGroup() != null && groupId.equals(s.getGroup().getId())))
         .filter(
             s ->
                 cohortId == null

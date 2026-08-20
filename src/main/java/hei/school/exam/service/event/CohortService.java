@@ -4,7 +4,6 @@ import hei.school.exam.dto.CohortResultsDto;
 import hei.school.exam.dto.GraduateEntryDto;
 import hei.school.exam.entity.Cohort;
 import hei.school.exam.entity.Course;
-import hei.school.exam.entity.Exam;
 import hei.school.exam.entity.Grade;
 import hei.school.exam.entity.Group;
 import hei.school.exam.entity.Student;
@@ -23,10 +22,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Computes cohort-wide results (yearly averages, graduate list). A student is considered
- * graduated once their average is >= 10 in EVERY course of their current track, regardless of
- * which group they were in when each grade was obtained (group history is not tracked, only the
- * grades themselves, which is enough since a student keeps every grade they ever earned).
+ * Computes cohort-wide results (yearly averages, graduate list). A student is considered graduated
+ * once their average is >= 10 in EVERY course of their current track, regardless of which group
+ * they were in when each grade was obtained (group history is not tracked, only the grades
+ * themselves, which is enough since a student keeps every grade they ever earned).
  */
 @Service
 @RequiredArgsConstructor
@@ -89,7 +88,8 @@ public class CohortService {
   }
 
   /** Overall average of a student, credit-weighted across the courses of their track. */
-  private Double overallAverage(Student student, List<Course> trackCourses, List<Grade> studentGrades) {
+  private Double overallAverage(
+      Student student, List<Course> trackCourses, List<Grade> studentGrades) {
     double weightedSum = 0;
     int totalCredits = 0;
     for (Course course : trackCourses) {
@@ -102,7 +102,8 @@ public class CohortService {
     return totalCredits == 0 ? null : weightedSum / totalCredits;
   }
 
-  private boolean isGraduated(Student student, List<Course> trackCourses, List<Grade> studentGrades) {
+  private boolean isGraduated(
+      Student student, List<Course> trackCourses, List<Grade> studentGrades) {
     if (trackCourses.isEmpty()) {
       return false;
     }
@@ -133,7 +134,8 @@ public class CohortService {
             .map(
                 s -> {
                   List<Course> trackCourses =
-                      trackSemesterCourseRepository.findByTrackId(s.getGroup().getTrack().getId())
+                      trackSemesterCourseRepository
+                          .findByTrackId(s.getGroup().getTrack().getId())
                           .stream()
                           .map(TrackSemesterCourse::getCourse)
                           .distinct()
@@ -155,7 +157,11 @@ public class CohortService {
             i -> {
               Candidate c = graduates.get(i);
               return new GraduateEntryDto(
-                  i + 1, c.student().getRef(), c.student().getLastName(), c.student().getFirstName(), c.average());
+                  i + 1,
+                  c.student().getRef(),
+                  c.student().getLastName(),
+                  c.student().getFirstName(),
+                  c.average());
             })
         .toList();
   }
@@ -184,7 +190,8 @@ public class CohortService {
                                             g ->
                                                 g.getExam() != null
                                                     && g.getExam().getCourse() != null
-                                                    && courseIsInYear(g.getExam().getCourse().getId(), year))
+                                                    && courseIsInYear(
+                                                        g.getExam().getCourse().getId(), year))
                                         .toList();
                                 if (studentGrades.isEmpty()) {
                                   return null;
@@ -196,7 +203,9 @@ public class CohortService {
                                   weightedSum += g.getValue() * coefficient;
                                   totalCoefficient += coefficient;
                                 }
-                                return totalCoefficient == 0 ? null : weightedSum / totalCoefficient;
+                                return totalCoefficient == 0
+                                    ? null
+                                    : weightedSum / totalCoefficient;
                               })
                           .filter(java.util.Objects::nonNull)
                           .toList();
@@ -204,7 +213,10 @@ public class CohortService {
                   double yearAverage =
                       studentYearAverages.isEmpty()
                           ? 0
-                          : studentYearAverages.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+                          : studentYearAverages.stream()
+                              .mapToDouble(Double::doubleValue)
+                              .average()
+                              .orElse(0);
 
                   return new CohortResultsDto.YearAverage(year, yearAverage);
                 })

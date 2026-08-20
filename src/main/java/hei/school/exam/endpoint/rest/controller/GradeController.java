@@ -36,7 +36,8 @@ public class GradeController {
 
   @GetMapping("/students/{studentId}/grades")
   @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-  public List<GradeDto> byStudent(@PathVariable UUID studentId, @AuthenticationPrincipal User principal) {
+  public List<GradeDto> byStudent(
+      @PathVariable UUID studentId, @AuthenticationPrincipal User principal) {
     List<Grade> grades = gradeService.findByStudent(studentId);
     if (principal instanceof Teacher teacher) {
       grades = grades.stream().filter(g -> teaches(teacher, g.getExam())).toList();
@@ -46,7 +47,8 @@ public class GradeController {
 
   @GetMapping("/courses/{courseId}/grades")
   @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-  public List<GradeDto> byCourse(@PathVariable UUID courseId, @AuthenticationPrincipal User principal) {
+  public List<GradeDto> byCourse(
+      @PathVariable UUID courseId, @AuthenticationPrincipal User principal) {
     if (principal instanceof Teacher teacher && !teacherHasCourse(teacher, courseId)) {
       throw new AccessDeniedException("Not your course");
     }
@@ -117,7 +119,9 @@ public class GradeController {
   }
 
   private boolean teaches(Teacher teacher, Exam exam) {
-    return exam != null && exam.getCourse() != null && teacherHasCourse(teacher, exam.getCourse().getId());
+    return exam != null
+        && exam.getCourse() != null
+        && teacherHasCourse(teacher, exam.getCourse().getId());
   }
 
   private boolean teacherHasCourse(Teacher teacher, UUID courseId) {

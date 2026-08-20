@@ -39,7 +39,8 @@ public class GradeService {
             .findById(studentId)
             .orElseThrow(() -> new RuntimeException("Student not found"));
 
-    Exam exam = examRepository.findById(examId).orElseThrow(() -> new RuntimeException("Exam not found"));
+    Exam exam =
+        examRepository.findById(examId).orElseThrow(() -> new RuntimeException("Exam not found"));
 
     Grade grade = new Grade();
     grade.setStudent(student);
@@ -51,8 +52,8 @@ public class GradeService {
   }
 
   /**
-   * A grade can change over time (dispute, error correction), but every modification is
-   * historised with a mandatory reason.
+   * A grade can change over time (dispute, error correction), but every modification is historised
+   * with a mandatory reason.
    */
   @Transactional
   public Grade update(UUID id, double newValue, String reason, User changedBy) {

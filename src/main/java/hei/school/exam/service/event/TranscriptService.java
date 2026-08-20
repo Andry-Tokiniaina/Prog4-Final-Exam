@@ -6,7 +6,6 @@ import hei.school.exam.entity.Grade;
 import hei.school.exam.entity.Student;
 import hei.school.exam.file.bucket.BucketComponent;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -26,8 +25,8 @@ public class TranscriptService {
   private final EventProducer<SendMailRequested> eventProducer;
 
   /**
-   * Generates the PDF transcript, uploads it to S3, then asynchronously requests (via
-   * EventBridge) that an email with a download link be sent to the student.
+   * Generates the PDF transcript, uploads it to S3, then asynchronously requests (via EventBridge)
+   * that an email with a download link be sent to the student.
    */
   @SneakyThrows
   public void requestTranscriptByEmail(UUID studentId) {

@@ -41,7 +41,8 @@ public class StudentController {
   @PostMapping("/students/me/transcript")
   @PreAuthorize("hasRole('STUDENT')")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public TranscriptRequestAcceptedDto requestMyTranscript(@AuthenticationPrincipal Student principal) {
+  public TranscriptRequestAcceptedDto requestMyTranscript(
+      @AuthenticationPrincipal Student principal) {
     transcriptService.requestTranscriptByEmail(principal.getId());
     return new TranscriptRequestAcceptedDto("The transcript will be sent by email shortly.");
   }
@@ -54,7 +55,9 @@ public class StudentController {
       @RequestParam(required = false) UUID cohortId,
       @RequestParam(required = false) UUID groupId,
       @RequestParam(required = false) UUID trackId) {
-    return studentService.findAll(cohortId, groupId, trackId).stream().map(DtoMapper::toDto).toList();
+    return studentService.findAll(cohortId, groupId, trackId).stream()
+        .map(DtoMapper::toDto)
+        .toList();
   }
 
   @PostMapping("/students")

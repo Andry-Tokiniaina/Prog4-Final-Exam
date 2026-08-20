@@ -66,7 +66,8 @@ public class TrackController {
 
   @GetMapping("/tracks/{trackId}/semesters/{semesterId}/courses")
   @PreAuthorize("hasRole('ADMIN')")
-  public List<CourseDto> assignedCourses(@PathVariable UUID trackId, @PathVariable UUID semesterId) {
+  public List<CourseDto> assignedCourses(
+      @PathVariable UUID trackId, @PathVariable UUID semesterId) {
     return courseAssignmentService.findAssignedCourses(trackId, semesterId).stream()
         .map(DtoMapper::toDto)
         .toList();
@@ -78,7 +79,9 @@ public class TrackController {
       @PathVariable UUID trackId,
       @PathVariable UUID semesterId,
       @RequestBody CourseAssignmentInput input) {
-    return courseAssignmentService.replaceAssignment(trackId, semesterId, input.courseIds()).stream()
+    return courseAssignmentService
+        .replaceAssignment(trackId, semesterId, input.courseIds())
+        .stream()
         .map(DtoMapper::toDto)
         .toList();
   }
