@@ -59,8 +59,8 @@ class CourseServiceTest {
     when(courseRepository.findById(id)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.findById(id))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Course not found");
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Course not found");
   }
 
   @Test
@@ -81,10 +81,12 @@ class CourseServiceTest {
     Course existing = new Course();
     existing.setId(id);
     existing.setRef("OLD");
+
     when(courseRepository.findById(id)).thenReturn(Optional.of(existing));
     when(courseRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    Course updated = courseService.update(id, new CourseInput("NEW", "NewTitle", 10));
+    Course updated =
+            courseService.update(id, new CourseInput("NEW", "NewTitle", 10));
 
     assertThat(updated.getId()).isEqualTo(id);
     assertThat(updated.getRef()).isEqualTo("NEW");
@@ -97,6 +99,7 @@ class CourseServiceTest {
     UUID id = UUID.randomUUID();
     Course course = new Course();
     course.setId(id);
+
     when(courseRepository.findById(id)).thenReturn(Optional.of(course));
 
     courseService.delete(id);
@@ -107,9 +110,12 @@ class CourseServiceTest {
   @Test
   void findTeachers_returns_empty_list_when_null() {
     UUID id = UUID.randomUUID();
+
     Course course = new Course();
     course.setId(id);
-    when(courseRepository.findById(id)).thenReturn(Optional.of(course));
+
+    when(courseRepository.findByIdWithTeachers(id))
+            .thenReturn(Optional.of(course));
 
     assertThat(courseService.findTeachers(id)).isEmpty();
   }
@@ -117,30 +123,42 @@ class CourseServiceTest {
   @Test
   void findTeachers_returns_existing_list() {
     UUID id = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
+    teacher.setId(UUID.randomUUID());
+
     Course course = new Course();
     course.setId(id);
     course.setTeachers(new ArrayList<>(List.of(teacher)));
-    when(courseRepository.findById(id)).thenReturn(Optional.of(course));
 
-    assertThat(courseService.findTeachers(id)).containsExactly(teacher);
+    when(courseRepository.findByIdWithTeachers(id))
+            .thenReturn(Optional.of(course));
+
+    assertThat(courseService.findTeachers(id))
+            .containsExactly(teacher);
   }
 
   @Test
   void assignTeacher_adds_teacher_and_course_both_ways() {
     UUID courseId = UUID.randomUUID();
     UUID teacherId = UUID.randomUUID();
+
     Course course = new Course();
     course.setId(courseId);
+
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
+
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId))
+            .thenReturn(Optional.of(teacher));
 
     courseService.assignTeacher(courseId, teacherId);
 
     assertThat(course.getTeachers()).contains(teacher);
     assertThat(teacher.getCourses()).contains(course);
+
     verify(courseRepository).save(course);
     verify(teacherRepository).save(teacher);
   }
@@ -149,14 +167,20 @@ class CourseServiceTest {
   void assignTeacher_does_not_duplicate_existing_link() {
     UUID courseId = UUID.randomUUID();
     UUID teacherId = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
+
     Course course = new Course();
     course.setId(courseId);
+
     course.setTeachers(new ArrayList<>(List.of(teacher)));
     teacher.setCourses(new ArrayList<>(List.of(course)));
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
+
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId))
+            .thenReturn(Optional.of(teacher));
 
     courseService.assignTeacher(courseId, teacherId);
 
@@ -168,28 +192,39 @@ class CourseServiceTest {
   void assignTeacher_throws_when_teacher_missing() {
     UUID courseId = UUID.randomUUID();
     UUID teacherId = UUID.randomUUID();
+
     Course course = new Course();
     course.setId(courseId);
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> courseService.assignTeacher(courseId, teacherId))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Teacher not found");
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId))
+            .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () -> courseService.assignTeacher(courseId, teacherId))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Teacher not found");
   }
 
   @Test
   void removeTeacher_removes_link_both_ways() {
     UUID courseId = UUID.randomUUID();
     UUID teacherId = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
+
     Course course = new Course();
     course.setId(courseId);
     course.setTeachers(new ArrayList<>(List.of(teacher)));
+
     teacher.setCourses(new ArrayList<>(List.of(course)));
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
+
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId))
+            .thenReturn(Optional.of(teacher));
 
     courseService.removeTeacher(courseId, teacherId);
 
@@ -199,21 +234,38 @@ class CourseServiceTest {
 
   @Test
   void checkTeacherOnCourse_throws_when_not_assigned() {
+    UUID courseId = UUID.randomUUID();
+    UUID teacherId = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
-    teacher.setId(UUID.randomUUID());
+    teacher.setId(teacherId);
+
     Course course = new Course();
+    course.setId(courseId);
     course.setTeachers(new ArrayList<>());
 
-    assertThatThrownBy(() -> courseService.checkTeacherOnCourse(teacher, course))
-        .isInstanceOf(AccessDeniedException.class);
+    when(courseRepository.findByIdWithTeachers(courseId))
+            .thenReturn(Optional.of(course));
+
+    assertThatThrownBy(
+            () -> courseService.checkTeacherOnCourse(teacher, course))
+            .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
   void checkTeacherOnCourse_passes_when_assigned() {
+    UUID courseId = UUID.randomUUID();
+    UUID teacherId = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
-    teacher.setId(UUID.randomUUID());
+    teacher.setId(teacherId);
+
     Course course = new Course();
+    course.setId(courseId);
     course.setTeachers(new ArrayList<>(List.of(teacher)));
+
+    when(courseRepository.findByIdWithTeachers(courseId))
+            .thenReturn(Optional.of(course));
 
     courseService.checkTeacherOnCourse(teacher, course);
   }
@@ -221,27 +273,41 @@ class CourseServiceTest {
   @Test
   void getForUser_checks_access_for_teacher_principal() {
     UUID courseId = UUID.randomUUID();
+    UUID teacherId = UUID.randomUUID();
+
     Teacher teacher = new Teacher();
-    teacher.setId(UUID.randomUUID());
+    teacher.setId(teacherId);
+
     Course course = new Course();
     course.setId(courseId);
     course.setTeachers(new ArrayList<>());
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    assertThatThrownBy(() -> courseService.getForUser(courseId, teacher))
-        .isInstanceOf(AccessDeniedException.class);
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(courseId))
+            .thenReturn(Optional.of(course));
+
+    assertThatThrownBy(
+            () -> courseService.getForUser(courseId, teacher))
+            .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
   void getForUser_returns_course_for_non_teacher_principal() {
     UUID courseId = UUID.randomUUID();
+
     Course course = new Course();
     course.setId(courseId);
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    hei.school.exam.entity.Admin admin = hei.school.exam.entity.Admin.builder().build();
+    when(courseRepository.findById(courseId))
+            .thenReturn(Optional.of(course));
 
-    assertThat(courseService.getForUser(courseId, admin)).isEqualTo(course);
+    hei.school.exam.entity.Admin admin =
+            hei.school.exam.entity.Admin.builder().build();
+
+    assertThat(courseService.getForUser(courseId, admin))
+            .isEqualTo(course);
+
     verify(courseRepository, never()).save(any());
   }
 }

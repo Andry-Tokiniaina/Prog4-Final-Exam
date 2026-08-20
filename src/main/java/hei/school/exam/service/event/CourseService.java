@@ -58,9 +58,13 @@ public class CourseService {
     courseRepository.delete(findById(id));
   }
 
+  @Transactional(readOnly = true)
   public List<Teacher> findTeachers(UUID courseId) {
-    Course course = findById(courseId);
-    return course.getTeachers() == null ? List.of() : course.getTeachers();
+    Course course =
+            courseRepository
+                    .findByIdWithTeachers(courseId)
+                    .orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+    return course.getTeachers() == null ? List.of() : new ArrayList<>(course.getTeachers());
   }
 
   @Transactional
@@ -91,12 +95,18 @@ public class CourseService {
     teacherRepository.save(teacher);
   }
 
+  @Transactional(readOnly = true)
   public void checkTeacherOnCourse(Teacher teacher, Course course) {
-    if (course.getTeachers() == null || !course.getTeachers().contains(teacher)) {
+    Course fresh =
+            courseRepository
+                    .findByIdWithTeachers(course.getId())
+                    .orElseThrow(() -> new RuntimeException("Course not found: " + course.getId()));
+    if (fresh.getTeachers() == null || !fresh.getTeachers().contains(teacher)) {
       throw new AccessDeniedException("Not your course");
     }
   }
 
+  @Transactional(readOnly = true)
   public Course getForUser(UUID courseId, User principal) {
     Course course = findById(courseId);
     if (principal instanceof Teacher teacher) checkTeacherOnCourse(teacher, course);

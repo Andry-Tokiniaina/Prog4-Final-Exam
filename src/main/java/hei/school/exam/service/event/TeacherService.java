@@ -5,6 +5,8 @@ import hei.school.exam.dto.TeacherUpdateInput;
 import hei.school.exam.entity.Course;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.repository.TeacherRepository;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -60,8 +62,12 @@ public class TeacherService {
     teacherRepository.delete(findById(id));
   }
 
+  @Transactional(readOnly = true)
   public List<Course> findCourses(UUID teacherId) {
-    Teacher teacher = findById(teacherId);
-    return teacher.getCourses() == null ? List.of() : teacher.getCourses();
+    Teacher teacher =
+            teacherRepository
+                    .findByIdWithCourses(teacherId)
+                    .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacherId));
+    return teacher.getCourses() == null ? List.of() : new ArrayList<>(teacher.getCourses());
   }
 }

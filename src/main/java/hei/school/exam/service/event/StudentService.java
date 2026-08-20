@@ -8,12 +8,13 @@ import hei.school.exam.entity.Group;
 import hei.school.exam.entity.Student;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.entity.TrackSemesterCourse;
-import hei.school.exam.repository.GradeRepository;
-import hei.school.exam.repository.GroupRepository;
-import hei.school.exam.repository.StudentRepository;
-import hei.school.exam.repository.TrackSemesterCourseRepository;
+import hei.school.exam.repository.*;
+
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ public class StudentService {
   private final GradeRepository gradeRepository;
   private final TrackSemesterCourseRepository trackSemesterCourseRepository;
   private final PasswordEncoder passwordEncoder;
+  private final TeacherRepository teacherRepository;
 
   public List<Student> findAll(UUID cohortId, UUID groupId, UUID trackId) {
     return studentRepository.findAll().stream()
@@ -112,17 +114,29 @@ public class StudentService {
     return studentRepository.save(student);
   }
 
+  @Transactional(readOnly = true)
   public void checkTeacherTeachesStudent(Teacher teacher, Student student) {
     if (student.getGroup() == null || student.getGroup().getTrack() == null)
       throw new AccessDeniedException("Student is not in a taught group");
+
+    Teacher freshTeacher =
+            teacherRepository
+                    .findByIdWithCourses(teacher.getId())
+                    .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacher.getId()));
+    Set<UUID> teacherCourseIds =
+            freshTeacher.getCourses() == null
+                    ? Set.of()
+                    : freshTeacher.getCourses().stream().map(Course::getId).collect(Collectors.toSet());
+
     boolean teaches =
-        trackSemesterCourseRepository.findByTrackId(student.getGroup().getTrack().getId()).stream()
-            .map(TrackSemesterCourse::getCourse)
-            .anyMatch(
-                course -> course.getTeachers() != null && course.getTeachers().contains(teacher));
+            trackSemesterCourseRepository.findByTrackId(student.getGroup().getTrack().getId()).stream()
+                    .map(TrackSemesterCourse::getCourse)
+                    .anyMatch(course -> teacherCourseIds.contains(course.getId()));
+
     if (!teaches) throw new AccessDeniedException("Teacher does not teach this student");
   }
 
+  @Transactional(readOnly = true)
   public Student getForUser(UUID id, hei.school.exam.entity.User principal) {
     Student student = findById(id);
     if (principal instanceof Teacher teacher) checkTeacherTeachesStudent(teacher, student);

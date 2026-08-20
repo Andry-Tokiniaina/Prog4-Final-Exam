@@ -6,10 +6,8 @@ import hei.school.exam.entity.GradeHistory;
 import hei.school.exam.entity.Student;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.entity.User;
-import hei.school.exam.repository.ExamRepository;
-import hei.school.exam.repository.GradeHistoryRepository;
-import hei.school.exam.repository.GradeRepository;
-import hei.school.exam.repository.StudentRepository;
+import hei.school.exam.repository.*;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +23,7 @@ public class GradeService {
   private final StudentRepository studentRepository;
   private final ExamRepository examRepository;
   private final GradeHistoryRepository gradeHistoryRepository;
+  private final TeacherRepository teacherRepository;
 
   public Grade findById(UUID id) {
     return gradeRepository
@@ -33,17 +32,29 @@ public class GradeService {
   }
 
   private boolean teaches(Teacher teacher, Exam exam) {
-    return exam != null
-        && exam.getCourse() != null
-        && teacher.getCourses() != null
-        && teacher.getCourses().stream().anyMatch(c -> c.getId().equals(exam.getCourse().getId()));
+    if (exam == null || exam.getCourse() == null) return false;
+    Teacher fresh =
+            teacherRepository
+                    .findByIdWithCourses(teacher.getId())
+                    .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacher.getId()));
+    return fresh.getCourses() != null
+            && fresh.getCourses().stream().anyMatch(c -> c.getId().equals(exam.getCourse().getId()));
+  }
+
+  private boolean teacherHasCourse(Teacher teacher, UUID courseId) {
+    Teacher fresh =
+            teacherRepository
+                    .findByIdWithCourses(teacher.getId())
+                    .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacher.getId()));
+    return fresh.getCourses() != null
+            && fresh.getCourses().stream().anyMatch(c -> c.getId().equals(courseId));
   }
 
   private void checkAccess(Grade grade, User principal) {
     if (principal instanceof Teacher teacher && !teaches(teacher, grade.getExam()))
       throw new AccessDeniedException("Not your course");
     if (principal instanceof Student student
-        && (grade.getStudent() == null || !grade.getStudent().getId().equals(student.getId())))
+            && (grade.getStudent() == null || !grade.getStudent().getId().equals(student.getId())))
       throw new AccessDeniedException("Not your grade");
   }
 
@@ -53,6 +64,7 @@ public class GradeService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<Grade> findByStudentForUser(UUID studentId, User principal) {
     List<Grade> grades = findByStudent(studentId);
     if (principal instanceof Teacher teacher)
@@ -60,23 +72,23 @@ public class GradeService {
     return grades;
   }
 
+  @Transactional(readOnly = true)
   public List<Grade> findByCourseForUser(UUID courseId, User principal) {
-    if (principal instanceof Teacher teacher
-        && (teacher.getCourses() == null
-            || teacher.getCourses().stream().noneMatch(c -> c.getId().equals(courseId))))
+    if (principal instanceof Teacher teacher && !teacherHasCourse(teacher, courseId))
       throw new AccessDeniedException("Not your course");
     return gradeRepository.findAll().stream()
-        .filter(
-            g ->
-                g.getExam() != null
-                    && g.getExam().getCourse() != null
-                    && g.getExam().getCourse().getId().equals(courseId))
-        .toList();
+            .filter(
+                    g ->
+                            g.getExam() != null
+                                    && g.getExam().getCourse() != null
+                                    && g.getExam().getCourse().getId().equals(courseId))
+            .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<Grade> findByExamForUser(UUID examId, User principal) {
     Exam exam =
-        examRepository.findById(examId).orElseThrow(() -> new RuntimeException("Exam not found"));
+            examRepository.findById(examId).orElseThrow(() -> new RuntimeException("Exam not found"));
     if (principal instanceof Teacher teacher && !teaches(teacher, exam))
       throw new AccessDeniedException("Not your course");
     return findByExam(examId);
@@ -123,12 +135,14 @@ public class GradeService {
     return gradeRepository.save(grade);
   }
 
+  @Transactional(readOnly = true)
   public Grade getForUser(UUID id, User principal) {
     Grade grade = findById(id);
     checkAccess(grade, principal);
     return grade;
   }
 
+  @Transactional(readOnly = true)
   public List<GradeHistory> findHistoryForUser(UUID gradeId, User principal) {
     Grade grade = findById(gradeId);
     checkAccess(grade, principal);

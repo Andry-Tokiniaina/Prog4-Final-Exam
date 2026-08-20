@@ -125,7 +125,8 @@ class TeacherServiceTest {
     UUID id = UUID.randomUUID();
     Teacher teacher = new Teacher();
     teacher.setId(id);
-    when(teacherRepository.findById(id)).thenReturn(Optional.of(teacher));
+
+    when(teacherRepository.findByIdWithCourses(id)).thenReturn(Optional.of(teacher));
 
     assertThat(teacherService.findCourses(id)).isEmpty();
   }
@@ -135,9 +136,11 @@ class TeacherServiceTest {
     UUID id = UUID.randomUUID();
     Teacher teacher = new Teacher();
     teacher.setId(id);
+
     Course course = new Course();
     teacher.setCourses(List.of(course));
-    when(teacherRepository.findById(id)).thenReturn(Optional.of(teacher));
+
+    when(teacherRepository.findByIdWithCourses(id)).thenReturn(Optional.of(teacher));
 
     assertThat(teacherService.findCourses(id)).containsExactly(course);
   }
