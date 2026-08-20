@@ -17,8 +17,23 @@ public class StudentService {
   private final StudentRepository studentRepository;
   private final GroupRepository groupRepository;
 
-  public List<Student> findAll() {
-    return studentRepository.findAll();
+  public List<Student> findAll(UUID cohortId, UUID groupId, UUID trackId) {
+    return studentRepository.findAll().stream()
+        .filter(
+            s -> groupId == null || (s.getGroup() != null && groupId.equals(s.getGroup().getId())))
+        .filter(
+            s ->
+                cohortId == null
+                    || (s.getGroup() != null
+                        && s.getGroup().getCohort() != null
+                        && cohortId.equals(s.getGroup().getCohort().getId())))
+        .filter(
+            s ->
+                trackId == null
+                    || (s.getGroup() != null
+                        && s.getGroup().getTrack() != null
+                        && trackId.equals(s.getGroup().getTrack().getId())))
+        .toList();
   }
 
   public Student findById(UUID id) {
@@ -29,6 +44,14 @@ public class StudentService {
 
   @Transactional
   public Student create(Student student) {
+    if (student.getGroup() != null && student.getGroup().getId() != null) {
+      Group group =
+          groupRepository
+              .findById(student.getGroup().getId())
+              .orElseThrow(
+                  () -> new RuntimeException("Group not found: " + student.getGroup().getId()));
+      student.setGroup(group);
+    }
     return studentRepository.save(student);
   }
 
@@ -40,6 +63,14 @@ public class StudentService {
     student.setFirstName(updatedStudent.getFirstName());
     student.setLastName(updatedStudent.getLastName());
     student.setEmail(updatedStudent.getEmail());
+
+    if (updatedStudent.getGroup() != null && updatedStudent.getGroup().getId() != null) {
+      Group group =
+          groupRepository
+              .findById(updatedStudent.getGroup().getId())
+              .orElseThrow(() -> new RuntimeException("Group not found"));
+      student.setGroup(group);
+    }
 
     return studentRepository.save(student);
   }

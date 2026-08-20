@@ -1,10 +1,9 @@
 package hei.school.exam.service.event;
 
-import hei.school.exam.entity.Student;
+import hei.school.exam.dto.GraduateEntryDto;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -12,12 +11,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class ExcelService {
 
-  private final AverageService averageService;
-
-  public byte[] generateGraduatesExcel(List<Student> students) {
+  public byte[] generateGraduatesExcel(List<GraduateEntryDto> graduates) {
 
     try (Workbook workbook = new XSSFWorkbook();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -34,19 +30,14 @@ public class ExcelService {
 
       int rowIndex = 1;
 
-      for (int i = 0; i < students.size(); i++) {
-
-        Student student = students.get(i);
-
+      for (GraduateEntryDto graduate : graduates) {
         Row row = sheet.createRow(rowIndex++);
 
-        double average = averageService.calculateStudentAverage(student.getId());
-
-        row.createCell(0).setCellValue(i + 1);
-        row.createCell(1).setCellValue(student.getRef());
-        row.createCell(2).setCellValue(student.getLastName());
-        row.createCell(3).setCellValue(student.getFirstName());
-        row.createCell(4).setCellValue(average);
+        row.createCell(0).setCellValue(graduate.rank());
+        row.createCell(1).setCellValue(graduate.std());
+        row.createCell(2).setCellValue(graduate.lastName());
+        row.createCell(3).setCellValue(graduate.firstName());
+        row.createCell(4).setCellValue(graduate.average());
       }
 
       for (int i = 0; i < 5; i++) {

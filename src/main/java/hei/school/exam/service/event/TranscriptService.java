@@ -1,10 +1,16 @@
 package hei.school.exam.service.event;
 
+import hei.school.exam.endpoint.event.EventProducer;
+import hei.school.exam.endpoint.event.model.SendMailRequested;
 import hei.school.exam.entity.Grade;
 import hei.school.exam.entity.Student;
+import hei.school.exam.file.bucket.BucketComponent;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 
@@ -15,6 +21,36 @@ public class TranscriptService {
   private final StudentService studentService;
   private final GradeService gradeService;
   private final PdfService pdfService;
+  private final BucketComponent bucketComponent;
+  private final EventProducer<SendMailRequested> eventProducer;
+
+  /**
+   * Generates the PDF transcript, uploads it to S3, then asynchronously requests (via EventBridge)
+   * that an email with a download link be sent to the student.
+   */
+  @SneakyThrows
+  public void requestTranscriptByEmail(UUID studentId) {
+    Student student = studentService.findById(studentId);
+    byte[] pdf = generateTranscript(studentId);
+
+    String bucketKey = "transcripts/" + studentId + ".pdf";
+    File tempFile = File.createTempFile("transcript-" + studentId, ".pdf");
+    Files.write(tempFile.toPath(), pdf);
+    bucketComponent.upload(tempFile, bucketKey);
+
+    var event =
+        SendMailRequested.builder()
+            .to(student.getEmail())
+            .subject("Votre relevé de notes")
+            .htmlBody(
+                "Bonjour "
+                    + student.getFirstName()
+                    + ", veuillez trouver ci-joint votre relevé de notes.")
+            .attachmentBucketKey(bucketKey)
+            .build();
+
+    eventProducer.accept(List.of(event));
+  }
 
   public byte[] generateTranscript(UUID studentId) {
 
