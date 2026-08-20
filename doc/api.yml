@@ -1,27 +1,15 @@
 openapi: 3.0.3
 info:
-  title: HEI - Graduate Management API
-  version: "1.1.0"
-  description: >
-    API for managing HEI graduates: tracks, semesters, courses, exams,
-    teachers, groups, students, grades (with history), and cohorts.
-    Sends PDF transcripts by email (asynchronously) and exports Excel
-    lists of graduates.
-
-
-    **Authentication**: this API relies on Spring Security's default
-    login/logout (session-based, `POST /login` form, `POST /logout`),
-    generated automatically by the framework. These endpoints are not
-    documented here since they are not JSON-based and are handled
-    natively by Spring Security. Once authenticated, the client keeps
-    its session via the `JSESSIONID` cookie.
-
+  title: HEI School Exam API
+  version: 1.0.0
+  description: OpenAPI specification adapted to the uploaded HEI School Exam Spring
+    Boot project. Authentication is stateless JWT; x-required-roles reflects the project's
+    @PreAuthorize annotations.
 servers:
   - url: https://your-app-preprod.poja.io
     description: Preprod
   - url: https://your-app.poja.io
     description: Prod
-
 tags:
   - name: Students
   - name: Teachers
@@ -33,18 +21,15 @@ tags:
   - name: Grades
   - name: Cohorts
   - name: Transcripts
-
 security:
-  - cookieAuth: []
-
+  - bearerAuth: []
 paths:
-
-  # ---------- STUDENTS (self-service) ----------
   /students/me:
     get:
-      tags: [Students]
+      tags:
+        - Students
       summary: Get the current student's profile
-      description: "Required role: STUDENT"
+      description: 'Required role: STUDENT'
       responses:
         '200':
           description: Student profile
@@ -52,12 +37,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Student'
-
+      x-required-roles:
+        - STUDENT
+      security:
+        - bearerAuth: []
   /students/me/grades:
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: View MY grades
-      description: "Required role: STUDENT. A student can only view their own grades."
+      description: 'Required role: STUDENT. A student can only view their own grades.'
       responses:
         '200':
           description: List of the current student's grades
@@ -67,15 +56,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Grade'
-
+      x-required-roles:
+        - STUDENT
+      security:
+        - bearerAuth: []
   /students/me/transcript:
     post:
-      tags: [Transcripts]
+      tags:
+        - Transcripts
       summary: Request the transcript to be sent by email
-      description: >
-        Triggers asynchronous generation of the PDF transcript, uploads it
-        to S3, then sends an email containing a download link (presigned
-        URL). Required role: STUDENT (for themselves only).
+      description: 'Triggers asynchronous generation of the PDF transcript, uploads
+        it to S3, then sends an email containing a download link (presigned URL).
+        Required role: STUDENT (for themselves only).
+
+        '
       responses:
         '202':
           description: Request accepted, processing asynchronously
@@ -83,13 +77,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TranscriptRequestAccepted'
-
-  # ---------- STUDENTS (admin/teacher management) ----------
+      x-required-roles:
+        - STUDENT
+      security:
+        - bearerAuth: []
   /students:
     get:
-      tags: [Students]
+      tags:
+        - Students
       summary: List students
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       parameters:
         - $ref: '#/components/parameters/CohortIdFilter'
         - $ref: '#/components/parameters/GroupIdFilter'
@@ -103,10 +100,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Student'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Students]
+      tags:
+        - Students
       summary: Create a student
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -120,14 +122,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Student'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /students/{studentId}:
     parameters:
       - $ref: '#/components/parameters/StudentId'
     get:
-      tags: [Students]
+      tags:
+        - Students
       summary: Get a student
-      description: "Required role: ADMIN, or TEACHER if the student is enrolled in one of their courses"
+      description: 'Required role: ADMIN, or TEACHER if the student is enrolled in
+        one of their courses'
       responses:
         '200':
           description: Student details
@@ -135,10 +142,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Student'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
     put:
-      tags: [Students]
+      tags:
+        - Students
       summary: Update a student
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -152,30 +165,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Student'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Students]
+      tags:
+        - Students
       summary: Delete a student
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Student deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /students/{studentId}/group:
     parameters:
       - $ref: '#/components/parameters/StudentId'
     put:
-      tags: [Students]
+      tags:
+        - Students
       summary: Change the student's group
-      description: >
-        A student can change group at any time during their track.
-        Required role: ADMIN.
+      description: 'A student can change group at any time during their track. Required
+        role: ADMIN.
+
+        '
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [groupId]
+              required:
+                - groupId
               properties:
                 groupId:
                   type: string
@@ -187,14 +211,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Student'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /students/{studentId}/grades:
     parameters:
       - $ref: '#/components/parameters/StudentId'
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: View a student's grades
-      description: "Required role: ADMIN, or TEACHER for their own courses only"
+      description: 'Required role: ADMIN, or TEACHER for their own courses only'
       responses:
         '200':
           description: List of grades
@@ -204,14 +232,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Grade'
-
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /students/{studentId}/transcript:
     parameters:
       - $ref: '#/components/parameters/StudentId'
     post:
-      tags: [Transcripts]
+      tags:
+        - Transcripts
       summary: Request a student's transcript to be sent by email
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '202':
           description: Request accepted, processing asynchronously
@@ -219,13 +252,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TranscriptRequestAccepted'
-
-  # ---------- TEACHERS ----------
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /teachers:
     get:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: List teachers
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of teachers
@@ -235,10 +271,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Teacher'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: Create a teacher
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -252,14 +293,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Teacher'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /teachers/{teacherId}:
     parameters:
       - $ref: '#/components/parameters/TeacherId'
     get:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: Get a teacher
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Teacher details
@@ -267,10 +312,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Teacher'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     put:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: Update a teacher
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -284,19 +334,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Teacher'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: Delete a teacher
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Teacher deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /teachers/me/courses:
     get:
-      tags: [Teachers]
+      tags:
+        - Teachers
       summary: List the current teacher's courses
-      description: "Required role: TEACHER"
+      description: 'Required role: TEACHER'
       responses:
         '200':
           description: List of taught courses
@@ -306,13 +365,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-
-  # ---------- TRACKS ----------
+      x-required-roles:
+        - TEACHER
+      security:
+        - bearerAuth: []
   /tracks:
     get:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: List tracks
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of tracks
@@ -322,10 +384,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Track'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: Create a track
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -339,14 +406,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /tracks/{trackId}:
     parameters:
       - $ref: '#/components/parameters/TrackId'
     get:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: Get a track
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Track details
@@ -354,10 +425,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     put:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: Update a track
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -371,25 +447,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: Delete a track
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Track deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /tracks/{trackId}/courses:
     parameters:
       - $ref: '#/components/parameters/TrackId'
     get:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: List a track's courses, across all semesters
-      description: >
-        Aggregate of the courses assigned to this track across all 6 of
-        its semesters (dedicated + common core). For per-semester
-        assignment, see PUT /tracks/{trackId}/semesters/{semesterId}/courses.
-        Required role: ADMIN.
+      description: 'Aggregate of the courses assigned to this track across all 6 of
+        its semesters (dedicated + common core). For per-semester assignment, see
+        PUT /tracks/{trackId}/semesters/{semesterId}/courses. Required role: ADMIN.
+
+        '
       responses:
         '200':
           description: List of the track's courses
@@ -399,15 +484,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /tracks/{trackId}/semesters/{semesterId}/courses:
     parameters:
       - $ref: '#/components/parameters/TrackId'
       - $ref: '#/components/parameters/SemesterId'
     get:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: List the courses assigned to this track for this semester
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of assigned courses (total credits must equal 30)
@@ -417,14 +506,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     put:
-      tags: [Tracks]
+      tags:
+        - Tracks
       summary: Replace the list of courses assigned to this track for this semester
-      description: >
-        Fully replaces the list of assigned courses (rather than an
-        incremental add/remove), so that the sum of credits can be
-        validated as exactly 30 in a single atomic operation. Required
-        role: ADMIN.
+      description: 'Fully replaces the list of assigned courses (rather than an incremental
+        add/remove), so that the sum of credits can be validated as exactly 30 in
+        a single atomic operation. Required role: ADMIN.
+
+        '
       requestBody:
         required: true
         content:
@@ -441,17 +535,21 @@ paths:
                 items:
                   $ref: '#/components/schemas/Course'
         '422':
-          description: "The sum of credits of the provided courses does not equal 30"
+          description: The sum of credits of the provided courses does not equal 30
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /semesters:
     get:
-      tags: [Semesters]
+      tags:
+        - Semesters
       summary: List semesters (S1 to S6, global entity)
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of semesters
@@ -461,12 +559,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Semester'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Semesters]
+      tags:
+        - Semesters
       summary: Create a semester
-      description: >
-        Required role: ADMIN. A semester is a global entity (number from 1
-        to 6), shared by all tracks.
+      description: 'Required role: ADMIN. A semester is a global entity (number from
+        1 to 6), shared by all tracks.
+
+        '
       requestBody:
         required: true
         content:
@@ -480,14 +584,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Semester'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /semesters/{semesterId}:
     parameters:
       - $ref: '#/components/parameters/SemesterId'
     get:
-      tags: [Semesters]
+      tags:
+        - Semesters
       summary: Get a semester
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Semester details
@@ -495,25 +603,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Semester'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Semesters]
+      tags:
+        - Semesters
       summary: Delete a semester
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Semester deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /semesters/{semesterId}/courses:
     parameters:
       - $ref: '#/components/parameters/SemesterId'
     get:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: List the courses assigned to this semester, across all tracks
-      description: >
-        Read-only aggregate of every track/semester assignment for this
-        semester number (useful for an admin-wide overview). For
-        assignment, see PUT /tracks/{trackId}/semesters/{semesterId}/courses.
-        Required role: ADMIN.
+      description: 'Read-only aggregate of every track/semester assignment for this
+        semester number (useful for an admin-wide overview). For assignment, see PUT
+        /tracks/{trackId}/semesters/{semesterId}/courses. Required role: ADMIN.
+
+        '
       responses:
         '200':
           description: List of the semester's courses
@@ -523,13 +640,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
-
-  # ---------- COURSES ----------
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses:
     get:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: List courses
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of courses
@@ -539,10 +659,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Course'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Create a course
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -556,14 +681,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Course'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses/{courseId}:
     parameters:
       - $ref: '#/components/parameters/CourseId'
     get:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Get a course
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       responses:
         '200':
           description: Course details
@@ -571,10 +700,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Course'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
     put:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Update a course
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -588,21 +723,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Course'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Delete a course
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Course deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses/{courseId}/teachers:
     parameters:
       - $ref: '#/components/parameters/CourseId'
     get:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: List a course's teachers
-      description: "A course can be taught by several teachers. Required role: ADMIN"
+      description: 'A course can be taught by several teachers. Required role: ADMIN'
       responses:
         '200':
           description: List of assigned teachers
@@ -612,17 +756,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Teacher'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Assign a teacher to the course
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [teacherId]
+              required:
+                - teacherId
               properties:
                 teacherId:
                   type: string
@@ -630,79 +780,38 @@ paths:
       responses:
         '204':
           description: Teacher assigned
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses/{courseId}/teachers/{teacherId}:
     parameters:
       - $ref: '#/components/parameters/CourseId'
       - $ref: '#/components/parameters/TeacherId'
     delete:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: Remove a teacher from the course
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Teacher removed
-
-  /courses/{courseId}/groups:
-    parameters:
-      - $ref: '#/components/parameters/CourseId'
-    get:
-      tags: [Courses]
-      summary: List the groups this course is given to
-      description: >
-        A course is given to several groups, but not necessarily all of
-        them. Required role: ADMIN, TEACHER (if assigned to the course)
-      responses:
-        '200':
-          description: List of groups
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Group'
-    post:
-      tags: [Courses]
-      summary: Add a group to the course
-      description: "Required role: ADMIN"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [groupId]
-              properties:
-                groupId:
-                  type: string
-                  format: uuid
-      responses:
-        '204':
-          description: Group added to the course
-
-  /courses/{courseId}/groups/{groupId}:
-    parameters:
-      - $ref: '#/components/parameters/CourseId'
-      - $ref: '#/components/parameters/GroupId'
-    delete:
-      tags: [Courses]
-      summary: Remove a group from the course
-      description: "Required role: ADMIN"
-      responses:
-        '204':
-          description: Group removed from the course
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses/{courseId}/tracks:
     parameters:
       - $ref: '#/components/parameters/CourseId'
     get:
-      tags: [Courses]
+      tags:
+        - Courses
       summary: List the tracks a course is associated with
-      description: >
-        List derived from existing assignments (see
-        PUT /tracks/{trackId}/semesters/{semesterId}/courses): a dedicated
-        course appears in a single track; a common core course appears in
-        every track. Required role: ADMIN.
+      description: 'List derived from existing assignments (see PUT /tracks/{trackId}/semesters/{semesterId}/courses):
+        a dedicated course appears in a single track; a common core course appears
+        in every track. Required role: ADMIN.
+
+        '
       responses:
         '200':
           description: List of associated tracks
@@ -712,14 +821,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Track'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /courses/{courseId}/exams:
     parameters:
       - $ref: '#/components/parameters/CourseId'
     get:
-      tags: [Exams]
+      tags:
+        - Exams
       summary: List a course's exams
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       responses:
         '200':
           description: List of exams
@@ -729,10 +842,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Exam'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
     post:
-      tags: [Exams]
+      tags:
+        - Exams
       summary: Create an exam for this course
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       requestBody:
         required: true
         content:
@@ -746,14 +865,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Exam'
-
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /courses/{courseId}/grades:
     parameters:
       - $ref: '#/components/parameters/CourseId'
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: List all grades for a course (across all exams)
-      description: "Required role: TEACHER (if assigned to the course), ADMIN"
+      description: 'Required role: TEACHER (if assigned to the course), ADMIN'
       responses:
         '200':
           description: List of the course's grades
@@ -763,15 +887,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Grade'
-
-  # ---------- EXAMS ----------
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /exams/{examId}:
     parameters:
       - $ref: '#/components/parameters/ExamId'
     get:
-      tags: [Exams]
+      tags:
+        - Exams
       summary: Get an exam
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       responses:
         '200':
           description: Exam details
@@ -779,10 +907,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Exam'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
     put:
-      tags: [Exams]
+      tags:
+        - Exams
       summary: Update an exam (date, coefficient)
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       requestBody:
         required: true
         content:
@@ -796,21 +930,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Exam'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Exams]
+      tags:
+        - Exams
       summary: Delete an exam
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Exam deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /exams/{examId}/grades:
     parameters:
       - $ref: '#/components/parameters/ExamId'
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: List the grades obtained for this exam
-      description: "Required role: ADMIN, TEACHER (if assigned to the course)"
+      description: 'Required role: ADMIN, TEACHER (if assigned to the course)'
       responses:
         '200':
           description: List of the exam's grades
@@ -820,13 +964,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Grade'
-
-  # ---------- GROUPS ----------
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /groups:
     get:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: List groups
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       parameters:
         - $ref: '#/components/parameters/CohortIdFilter'
         - $ref: '#/components/parameters/TrackIdFilter'
@@ -839,10 +987,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Group'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     post:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: Create a group
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -856,14 +1009,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Group'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /groups/{groupId}:
     parameters:
       - $ref: '#/components/parameters/GroupId'
     get:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: Get a group
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Group details
@@ -871,10 +1028,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Group'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     put:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: Update a group
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       requestBody:
         required: true
         content:
@@ -888,21 +1050,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Group'
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
     delete:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: Delete a group
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '204':
           description: Group deleted
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /groups/{groupId}/students:
     parameters:
       - $ref: '#/components/parameters/GroupId'
     get:
-      tags: [Groups]
+      tags:
+        - Groups
       summary: List the group's students
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: List of students
@@ -912,13 +1083,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Student'
-
-  # ---------- GRADES ----------
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /grades:
     post:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: Create a grade
-      description: "Required role: TEACHER (for their own courses), ADMIN"
+      description: 'Required role: TEACHER (for their own courses), ADMIN'
       requestBody:
         required: true
         content:
@@ -932,14 +1106,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Grade'
-
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /grades/{gradeId}:
     parameters:
       - $ref: '#/components/parameters/GradeId'
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: Get a grade
-      description: "Required role: ADMIN, TEACHER (for their own courses), STUDENT (for their own grade)"
+      description: 'Required role: ADMIN, TEACHER (for their own courses), STUDENT
+        (for their own grade)'
       responses:
         '200':
           description: Grade details
@@ -947,13 +1127,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Grade'
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+        - STUDENT
+      security:
+        - bearerAuth: []
     put:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: Update a grade
-      description: >
-        A grade can change over time (dispute, error), but a reason is
-        mandatory for every modification and a history is kept. Required
-        role: TEACHER (for their own courses), ADMIN.
+      description: 'A grade can change over time (dispute, error), but a reason is
+        mandatory for every modification and a history is kept. Required role: TEACHER
+        (for their own courses), ADMIN.
+
+        '
       requestBody:
         required: true
         content:
@@ -967,14 +1155,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Grade'
-
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+      security:
+        - bearerAuth: []
   /grades/{gradeId}/history:
     parameters:
       - $ref: '#/components/parameters/GradeId'
     get:
-      tags: [Grades]
+      tags:
+        - Grades
       summary: View the history of changes to a grade
-      description: "Required role: ADMIN, TEACHER (for their own courses), STUDENT (for their own grade)"
+      description: 'Required role: ADMIN, TEACHER (for their own courses), STUDENT
+        (for their own grade)'
       responses:
         '200':
           description: History of changes
@@ -984,15 +1178,21 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GradeHistoryEntry'
-
-  # ---------- COHORTS ----------
+      x-required-roles:
+        - ADMIN
+        - TEACHER
+        - STUDENT
+      security:
+        - bearerAuth: []
   /cohorts:
     get:
-      tags: [Cohorts]
+      tags:
+        - Cohorts
       summary: List cohorts
-      description: >
-        Used in particular by the Thymeleaf interface to list every
-        cohort. Required role: ADMIN.
+      description: 'Used in particular by the Thymeleaf interface to list every cohort.
+        Required role: ADMIN.
+
+        '
       responses:
         '200':
           description: List of cohorts
@@ -1002,14 +1202,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cohort'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /cohorts/{cohortId}:
     parameters:
       - $ref: '#/components/parameters/CohortId'
     get:
-      tags: [Cohorts]
+      tags:
+        - Cohorts
       summary: Get a cohort
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Cohort details
@@ -1017,14 +1221,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cohort'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /cohorts/{cohortId}/results:
     parameters:
       - $ref: '#/components/parameters/CohortId'
     get:
-      tags: [Cohorts]
+      tags:
+        - Cohorts
       summary: View the cohort's results over the 3 years
-      description: "Required role: ADMIN"
+      description: 'Required role: ADMIN'
       responses:
         '200':
           description: Aggregated cohort results
@@ -1032,18 +1240,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CohortResults'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /cohorts/{cohortId}/graduates:
     parameters:
       - $ref: '#/components/parameters/CohortId'
     get:
-      tags: [Cohorts]
+      tags:
+        - Cohorts
       summary: List the cohort's graduates, ranked
-      description: >
-        A student is considered graduated once they have obtained an
-        average of 10 or above in every one of their courses. The list is
-        sorted by rank (rank 1 = best overall average).
-        Required role: ADMIN.
+      description: 'A student is considered graduated once they have obtained an average
+        of 10 or above in every one of their courses. The list is sorted by rank (rank
+        1 = best overall average). Required role: ADMIN.
+
+        '
       responses:
         '200':
           description: List of graduates sorted by rank
@@ -1053,38 +1265,202 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GraduateEntry'
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
   /cohorts/{cohortId}/graduates/export:
     parameters:
       - $ref: '#/components/parameters/CohortId'
     get:
-      tags: [Cohorts]
+      tags:
+        - Cohorts
       summary: Download the cohort's graduate list as an Excel file
-      description: >
-        Direct download (no email) of an Excel file containing the rank,
-        student reference (STD), last name, first name, and overall
-        average of each graduate, sorted by rank. Used by the download
-        button in the Thymeleaf interface. Required role: ADMIN.
+      description: 'Direct download (no email) of an Excel file containing the rank,
+        student reference (STD), last name, first name, and overall average of each
+        graduate, sorted by rank. Used by the download button in the Thymeleaf interface.
+        Required role: ADMIN.
+
+        '
       responses:
         '200':
-          description: Excel file of graduates
+          description: XLSX file containing the cohort graduates
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
                 type: string
                 format: binary
-
+      x-required-roles:
+        - ADMIN
+      security:
+        - bearerAuth: []
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate and obtain a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+      x-required-roles:
+        - PUBLIC
+  /ping:
+    get:
+      tags:
+        - Health
+      summary: Health ping
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+      x-required-roles:
+        - PUBLIC
+  /health/db:
+    get:
+      tags:
+        - Health
+      summary: Database health check
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-required-roles:
+        - AUTHENTICATED
+  /health/bucket:
+    get:
+      tags:
+        - Health
+      summary: Bucket health check
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-required-roles:
+        - AUTHENTICATED
+  /health/email:
+    get:
+      tags:
+        - Health
+      summary: Email health check
+      parameters:
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-required-roles:
+        - AUTHENTICATED
+  /health/event1:
+    get:
+      tags:
+        - Health
+      summary: Create test events
+      parameters:
+        - name: nbEvent
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: waitInSeconds
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Event UUIDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+      x-required-roles:
+        - AUTHENTICATED
+  /health/event/uuids:
+    post:
+      tags:
+        - Health
+      summary: Check test event UUIDs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-required-roles:
+        - AUTHENTICATED
+  /hello:
+    get:
+      tags:
+        - Mail
+      summary: Send a test email
+      parameters:
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-required-roles:
+        - AUTHENTICATED
 components:
-
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: JSESSIONID
-      description: >
-        Default Spring Security session, obtained via the native login
-        form (POST /login) and invalidated via POST /logout.
-
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT returned by POST /login.
   parameters:
     StudentId:
       name: studentId
@@ -1170,13 +1546,13 @@ components:
       schema:
         type: string
         format: uuid
-
   schemas:
-
     Role:
       type: string
-      enum: [STUDENT, TEACHER, ADMIN]
-
+      enum:
+        - STUDENT
+        - TEACHER
+        - ADMIN
     Error:
       type: object
       properties:
@@ -1184,7 +1560,6 @@ components:
           type: string
         code:
           type: string
-
     Student:
       type: object
       properties:
@@ -1211,14 +1586,13 @@ components:
         cohortId:
           type: string
           format: uuid
-
     StudentInput:
       type: object
-      required: [std, firstName, lastName, email, groupId, trackId, cohortId]
+      required:
+        - password
       properties:
         std:
           type: string
-          example: STD2024001
         firstName:
           type: string
         lastName:
@@ -1226,10 +1600,12 @@ components:
         email:
           type: string
           format: email
+        password:
+          type: string
+          format: password
         groupId:
           type: string
           format: uuid
-
     Teacher:
       type: object
       properties:
@@ -1243,10 +1619,10 @@ components:
         email:
           type: string
           format: email
-
     TeacherInput:
       type: object
-      required: [firstName, lastName, email]
+      required:
+        - password
       properties:
         firstName:
           type: string
@@ -1255,14 +1631,17 @@ components:
         email:
           type: string
           format: email
-
+        password:
+          type: string
+          format: password
     Track:
       type: object
-      description: >
-        A track has 3 years of 2 semesters each (6 semesters in total),
-        for a mandatory total of 180 credits (30 per semester). A track
-        has a list of courses: its dedicated courses, plus the common
-        core courses shared with the other tracks.
+      description: 'A track has 3 years of 2 semesters each (6 semesters in total),
+        for a mandatory total of 180 credits (30 per semester). A track has a list
+        of courses: its dedicated courses, plus the common core courses shared with
+        the other tracks.
+
+        '
       properties:
         id:
           type: string
@@ -1272,24 +1651,24 @@ components:
         expectedTotalCredits:
           type: integer
           default: 180
-          description: Total credits expected over the whole track (fixed business rule).
-
+          description: Total credits expected over the whole track (fixed business
+            rule).
     TrackInput:
       type: object
-      required: [name]
+      required:
+        - name
       properties:
         name:
           type: string
         description:
           type: string
-
     Semester:
       type: object
-      description: >
-        A semester is a global entity (S1 to S6, shared by all tracks)
-        and is not specific to a track. For a given track, the sum of
-        credits of its courses (dedicated + common core) attached to this
-        semester must equal 30.
+      description: 'A semester is a global entity (S1 to S6, shared by all tracks)
+        and is not specific to a track. For a given track, the sum of credits of its
+        courses (dedicated + common core) attached to this semester must equal 30.
+
+        '
       properties:
         id:
           type: string
@@ -1303,32 +1682,32 @@ components:
           type: integer
           minimum: 1
           maximum: 3
-          description: "Corresponding track year (computed: year = ceil(number / 2))."
+          description: 'Corresponding track year (computed: year = ceil(number / 2)).'
           example: 1
         expectedCredits:
           type: integer
           default: 30
-          description: Number of credits expected per track for this semester (fixed business rule).
-
+          description: Number of credits expected per track for this semester (fixed
+            business rule).
     SemesterInput:
       type: object
-      required: [number]
+      required:
+        - number
       properties:
         number:
           type: integer
           minimum: 1
           maximum: 6
           example: 1
-
     Course:
       type: object
-      description: >
-        A course is created independently of any track or semester. Its
-        association with one (or more) tracks for a given semester is
-        done via PUT /tracks/{trackId}/semesters/{semesterId}/courses,
-        which replaces the full list of assigned courses (atomic
-        validation of the 30-credit total). A course associated with
-        EVERY track for a given semester is a common core course.
+      description: 'A course is created independently of any track or semester. Its
+        association with one (or more) tracks for a given semester is done via PUT
+        /tracks/{trackId}/semesters/{semesterId}/courses, which replaces the full
+        list of assigned courses (atomic validation of the 30-credit total). A course
+        associated with EVERY track for a given semester is a common core course.
+
+        '
       properties:
         id:
           type: string
@@ -1342,10 +1721,12 @@ components:
         credit:
           type: integer
           example: 5
-
     CourseInput:
       type: object
-      required: [ref, title, credit]
+      required:
+        - ref
+        - title
+        - credit
       properties:
         ref:
           type: string
@@ -1355,22 +1736,21 @@ components:
         credit:
           type: integer
           example: 5
-
     CourseAssignmentInput:
       type: object
-      required: [courseIds]
-      description: >
-        Full list of courses assigned to a track for a given semester.
-        Fully replaces the existing assignment (rather than an
-        incremental add/remove), so the sum of credits can be validated
-        as 30 in a single operation.
+      required:
+        - courseIds
+      description: 'Full list of courses assigned to a track for a given semester.
+        Fully replaces the existing assignment (rather than an incremental add/remove),
+        so the sum of credits can be validated as 30 in a single operation.
+
+        '
       properties:
         courseIds:
           type: array
           items:
             type: string
             format: uuid
-
     Exam:
       type: object
       properties:
@@ -1387,10 +1767,11 @@ components:
           type: number
           format: float
           example: 1.5
-
     ExamInput:
       type: object
-      required: [date, coefficient]
+      required:
+        - date
+        - coefficient
       properties:
         date:
           type: string
@@ -1399,7 +1780,6 @@ components:
           type: number
           format: float
           example: 1.5
-
     Group:
       type: object
       properties:
@@ -1414,10 +1794,12 @@ components:
         trackId:
           type: string
           format: uuid
-
     GroupInput:
       type: object
-      required: [name, cohortId, trackId]
+      required:
+        - name
+        - cohortId
+        - trackId
       properties:
         name:
           type: string
@@ -1427,7 +1809,6 @@ components:
         trackId:
           type: string
           format: uuid
-
     Grade:
       type: object
       description: Grade obtained by a student for a given exam.
@@ -1443,16 +1824,16 @@ components:
           format: uuid
         value:
           type: number
-          format: float
-          minimum: 0
-          maximum: 20
+          format: double
         updatedAt:
           type: string
           format: date-time
-
     GradeInput:
       type: object
-      required: [studentId, examId, value]
+      required:
+        - studentId
+        - examId
+        - value
       properties:
         studentId:
           type: string
@@ -1465,20 +1846,18 @@ components:
           format: float
           minimum: 0
           maximum: 20
-
     GradeUpdate:
       type: object
-      required: [value, reason]
+      required:
+        - value
+        - reason
       properties:
         value:
           type: number
-          format: float
-          minimum: 0
-          maximum: 20
+          format: double
         reason:
           type: string
           description: Mandatory reason for the modification (dispute, error, etc.)
-
     GradeHistoryEntry:
       type: object
       properties:
@@ -1499,7 +1878,6 @@ components:
         changedAt:
           type: string
           format: date-time
-
     Cohort:
       type: object
       properties:
@@ -1512,7 +1890,12 @@ components:
           type: integer
         endYear:
           type: integer
-
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
     CohortResults:
       type: object
       properties:
@@ -1533,7 +1916,6 @@ components:
           type: integer
         studentCount:
           type: integer
-
     GraduateEntry:
       type: object
       description: Row of a cohort's graduate list, sorted by rank.
@@ -1553,10 +1935,56 @@ components:
           type: number
           format: float
           description: Student's overall average
-
     TranscriptRequestAccepted:
       type: object
       properties:
         message:
           type: string
-          example: "The transcript will be sent by email shortly."
+          example: The transcript will be sent by email shortly.
+    StudentUpdateInput:
+      type: object
+      properties:
+        std:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        groupId:
+          type: string
+          format: uuid
+    TeacherUpdateInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
