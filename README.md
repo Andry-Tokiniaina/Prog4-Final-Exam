@@ -32,6 +32,6 @@ Ce README est destiné au correcteur. Il décrit rapidement :
 ## Cas de test pour l'envoi du relevé de notes (mail)
 - Nous avons pré-préparé un compte student contenant des données de test et votre adresse e-mail (toky@mail.hei.school) afin que vous puissiez tester l'envoi du relevé de notes.
 - L'endpoint exact à appeler pour déclencher l'envoi du mail : /students/me/transcript
-- Le header complet lié à ce user : Autorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2t5QG1haWwuaGVpLnNjaG9vbCIsImlhdCI6MTc4NzI0NzAwMSwiZXhwIjoxNzg5ODM5MDAxfQ.4DRUPXjne9eH01EpIpy2u2q-j1km5h0uyb0I5TSDYBjk_ESMUrhrk-YDXPLfC0AUlvHRaHLgbHnOulVP0xabNA
+- Le header complet lié à ce user : `Authorization`: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2t5QG1haWwuaGVpLnNjaG9vbCIsImlhdCI6MTc4NzI0NzAwMSwiZXhwIjoxNzg5ODM5MDAxfQ.4DRUPXjne9eH01EpIpy2u2q-j1km5h0uyb0I5TSDYBjk_ESMUrhrk-YDXPLfC0AUlvHRaHLgbHnOulVP0xabNA
 
 N.B: nous avons mis une durée de vie de 30 jours aux token pour être sûr que ce token serait encore valide pendant la correction
