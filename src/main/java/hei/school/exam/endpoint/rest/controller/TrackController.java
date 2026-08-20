@@ -32,9 +32,7 @@ public class TrackController {
   @PreAuthorize("hasRole('ADMIN')")
   @ResponseStatus(HttpStatus.CREATED)
   public TrackDto create(@RequestBody TrackInput input) {
-    Track track = new Track();
-    track.setName(input.name());
-    return DtoMapper.toDto(trackService.create(track));
+    return DtoMapper.toDto(trackService.create(input));
   }
 
   @GetMapping("/tracks/{trackId}")
@@ -48,7 +46,7 @@ public class TrackController {
   public TrackDto update(@PathVariable UUID trackId, @RequestBody TrackInput input) {
     Track track = new Track();
     track.setName(input.name());
-    return DtoMapper.toDto(trackService.update(trackId, track));
+    return DtoMapper.toDto(trackService.update(trackId, input));
   }
 
   @DeleteMapping("/tracks/{trackId}")
