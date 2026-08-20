@@ -40,12 +40,12 @@ class GradeServiceTest {
     teacherRepository = mock(TeacherRepository.class);
 
     gradeService =
-            new GradeService(
-                    gradeRepository,
-                    studentRepository,
-                    examRepository,
-                    gradeHistoryRepository,
-                    teacherRepository);
+        new GradeService(
+            gradeRepository,
+            studentRepository,
+            examRepository,
+            gradeHistoryRepository,
+            teacherRepository);
   }
 
   private Course courseWithId(UUID id) {
@@ -54,14 +54,11 @@ class GradeServiceTest {
     return course;
   }
 
-  private Teacher teacherWithCourses(
-          UUID teacherId,
-          Course... courses) {
+  private Teacher teacherWithCourses(UUID teacherId, Course... courses) {
 
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
-    teacher.setCourses(
-            new ArrayList<>(List.of(courses)));
+    teacher.setCourses(new ArrayList<>(List.of(courses)));
 
     return teacher;
   }
@@ -70,12 +67,9 @@ class GradeServiceTest {
   void findById_throws_when_missing() {
     UUID id = UUID.randomUUID();
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.empty());
+    when(gradeRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () -> gradeService.findById(id))
-            .isInstanceOf(RuntimeException.class);
+    assertThatThrownBy(() -> gradeService.findById(id)).isInstanceOf(RuntimeException.class);
   }
 
   @Test
@@ -94,12 +88,9 @@ class GradeServiceTest {
     Grade other = new Grade();
     other.setStudent(otherStudent);
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of(matching, other));
+    when(gradeRepository.findAll()).thenReturn(List.of(matching, other));
 
-    assertThat(
-            gradeService.findByStudent(studentId))
-            .containsExactly(matching);
+    assertThat(gradeService.findByStudent(studentId)).containsExactly(matching);
   }
 
   @Test
@@ -116,8 +107,7 @@ class GradeServiceTest {
     Exam taughtExam = new Exam();
     taughtExam.setCourse(course);
 
-    Course notTaughtCourse =
-            courseWithId(UUID.randomUUID());
+    Course notTaughtCourse = courseWithId(UUID.randomUUID());
 
     Exam notTaughtExam = new Exam();
     notTaughtExam.setCourse(notTaughtCourse);
@@ -130,33 +120,18 @@ class GradeServiceTest {
     gradeNotTaught.setStudent(student);
     gradeNotTaught.setExam(notTaughtExam);
 
-    when(gradeRepository.findAll())
-            .thenReturn(
-                    List.of(
-                            gradeTaught,
-                            gradeNotTaught));
+    when(gradeRepository.findAll()).thenReturn(List.of(gradeTaught, gradeNotTaught));
 
     UUID teacherId = UUID.randomUUID();
 
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    Teacher freshTeacher =
-            teacherWithCourses(
-                    teacherId,
-                    course);
+    Teacher freshTeacher = teacherWithCourses(teacherId, course);
 
-    when(
-            teacherRepository.findByIdWithCourses(
-                    teacherId))
-            .thenReturn(
-                    Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    assertThat(
-            gradeService.findByStudentForUser(
-                    studentId,
-                    teacher))
-            .containsExactly(gradeTaught);
+    assertThat(gradeService.findByStudentForUser(studentId, teacher)).containsExactly(gradeTaught);
   }
 
   @Test
@@ -169,14 +144,10 @@ class GradeServiceTest {
     Grade grade = new Grade();
     grade.setStudent(student);
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of(grade));
+    when(gradeRepository.findAll()).thenReturn(List.of(grade));
 
-    assertThat(
-            gradeService.findByStudentForUser(
-                    studentId,
-                    Admin.builder().build()))
-            .containsExactly(grade);
+    assertThat(gradeService.findByStudentForUser(studentId, Admin.builder().build()))
+        .containsExactly(grade);
   }
 
   @Test
@@ -187,22 +158,12 @@ class GradeServiceTest {
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    Teacher freshTeacher =
-            teacherWithCourses(teacherId);
+    Teacher freshTeacher = teacherWithCourses(teacherId);
 
-    when(
-            teacherRepository.findByIdWithCourses(
-                    teacherId))
-            .thenReturn(
-                    Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.findByCourseForUser(
-                            courseId,
-                            teacher))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.findByCourseForUser(courseId, teacher))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -215,12 +176,9 @@ class GradeServiceTest {
     Grade matching = new Grade();
     matching.setExam(exam);
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of(matching));
+    when(gradeRepository.findAll()).thenReturn(List.of(matching));
 
-    assertThat(
-            gradeService.findByExam(examId))
-            .containsExactly(matching);
+    assertThat(gradeService.findByExam(examId)).containsExactly(matching);
   }
 
   @Test
@@ -235,46 +193,30 @@ class GradeServiceTest {
     exam.setId(examId);
     exam.setCourse(course);
 
-    when(examRepository.findById(examId))
-            .thenReturn(Optional.of(exam));
+    when(examRepository.findById(examId)).thenReturn(Optional.of(exam));
 
     UUID teacherId = UUID.randomUUID();
 
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    Teacher freshTeacher =
-            teacherWithCourses(teacherId);
+    Teacher freshTeacher = teacherWithCourses(teacherId);
 
-    when(
-            teacherRepository.findByIdWithCourses(
-                    teacherId))
-            .thenReturn(
-                    Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.findByExamForUser(
-                            examId,
-                            teacher))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.findByExamForUser(examId, teacher))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
   void findByExamForUser_throws_when_exam_missing() {
     UUID examId = UUID.randomUUID();
 
-    when(examRepository.findById(examId))
-            .thenReturn(Optional.empty());
+    when(examRepository.findById(examId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.findByExamForUser(
-                            examId,
-                            Admin.builder().build()))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Exam not found");
+    assertThatThrownBy(() -> gradeService.findByExamForUser(examId, Admin.builder().build()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Exam not found");
   }
 
   @Test
@@ -288,32 +230,19 @@ class GradeServiceTest {
     exam.setId(examId);
     exam.setCourse(course);
 
-    when(examRepository.findById(examId))
-            .thenReturn(Optional.of(exam));
+    when(examRepository.findById(examId)).thenReturn(Optional.of(exam));
 
     UUID teacherId = UUID.randomUUID();
 
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    Teacher freshTeacher =
-            teacherWithCourses(teacherId);
+    Teacher freshTeacher = teacherWithCourses(teacherId);
 
-    when(
-            teacherRepository.findByIdWithCourses(
-                    teacherId))
-            .thenReturn(
-                    Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.create(
-                            UUID.randomUUID(),
-                            examId,
-                            10,
-                            teacher))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.create(UUID.randomUUID(), examId, 10, teacher))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -327,30 +256,18 @@ class GradeServiceTest {
     Student student = new Student();
     student.setId(studentId);
 
-    when(examRepository.findById(examId))
-            .thenReturn(Optional.of(exam));
+    when(examRepository.findById(examId)).thenReturn(Optional.of(exam));
 
-    when(studentRepository.findById(studentId))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
 
-    when(gradeRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(gradeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    Grade created =
-            gradeService.create(
-                    studentId,
-                    examId,
-                    15.5,
-                    Admin.builder().build());
+    Grade created = gradeService.create(studentId, examId, 15.5, Admin.builder().build());
 
-    assertThat(created.getStudent())
-            .isEqualTo(student);
-    assertThat(created.getExam())
-            .isEqualTo(exam);
-    assertThat(created.getValue())
-            .isEqualTo(15.5);
-    assertThat(created.getUpdatedAt())
-            .isNotNull();
+    assertThat(created.getStudent()).isEqualTo(student);
+    assertThat(created.getExam()).isEqualTo(exam);
+    assertThat(created.getValue()).isEqualTo(15.5);
+    assertThat(created.getUpdatedAt()).isNotNull();
   }
 
   @Test
@@ -361,21 +278,13 @@ class GradeServiceTest {
     Exam exam = new Exam();
     exam.setId(examId);
 
-    when(examRepository.findById(examId))
-            .thenReturn(Optional.of(exam));
+    when(examRepository.findById(examId)).thenReturn(Optional.of(exam));
 
-    when(studentRepository.findById(studentId))
-            .thenReturn(Optional.empty());
+    when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.create(
-                            studentId,
-                            examId,
-                            10,
-                            Admin.builder().build()))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Student not found");
+    assertThatThrownBy(() -> gradeService.create(studentId, examId, 10, Admin.builder().build()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Student not found");
   }
 
   @Test
@@ -386,28 +295,17 @@ class GradeServiceTest {
     grade.setId(id);
     grade.setValue(10);
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.of(grade));
+    when(gradeRepository.findById(id)).thenReturn(Optional.of(grade));
 
-    when(gradeRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(gradeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    Admin admin =
-            Admin.builder().build();
+    Admin admin = Admin.builder().build();
 
-    Grade updated =
-            gradeService.update(
-                    id,
-                    18,
-                    "correction",
-                    admin);
+    Grade updated = gradeService.update(id, 18, "correction", admin);
 
-    assertThat(updated.getValue())
-            .isEqualTo(18);
+    assertThat(updated.getValue()).isEqualTo(18);
 
-    org.mockito.Mockito.verify(
-                    gradeHistoryRepository)
-            .save(any(GradeHistory.class));
+    org.mockito.Mockito.verify(gradeHistoryRepository).save(any(GradeHistory.class));
   }
 
   @Test
@@ -416,39 +314,25 @@ class GradeServiceTest {
     UUID courseId = UUID.randomUUID();
 
     Exam exam = new Exam();
-    exam.setCourse(
-            courseWithId(courseId));
+    exam.setCourse(courseWithId(courseId));
 
     Grade grade = new Grade();
     grade.setId(id);
     grade.setExam(exam);
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.of(grade));
+    when(gradeRepository.findById(id)).thenReturn(Optional.of(grade));
 
     UUID teacherId = UUID.randomUUID();
 
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    Teacher freshTeacher =
-            teacherWithCourses(teacherId);
+    Teacher freshTeacher = teacherWithCourses(teacherId);
 
-    when(
-            teacherRepository.findByIdWithCourses(
-                    teacherId))
-            .thenReturn(
-                    Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.update(
-                            id,
-                            12,
-                            "reason",
-                            teacher))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.update(id, 12, "reason", teacher))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -462,21 +346,13 @@ class GradeServiceTest {
     grade.setId(id);
     grade.setStudent(owner);
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.of(grade));
+    when(gradeRepository.findById(id)).thenReturn(Optional.of(grade));
 
     Student otherStudent = new Student();
     otherStudent.setId(UUID.randomUUID());
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.update(
-                            id,
-                            12,
-                            "reason",
-                            otherStudent))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.update(id, 12, "reason", otherStudent))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -490,19 +366,13 @@ class GradeServiceTest {
     grade.setId(id);
     grade.setStudent(owner);
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.of(grade));
+    when(gradeRepository.findById(id)).thenReturn(Optional.of(grade));
 
     Student otherStudent = new Student();
     otherStudent.setId(UUID.randomUUID());
 
-    assertThatThrownBy(
-            () ->
-                    gradeService.getForUser(
-                            id,
-                            otherStudent))
-            .isInstanceOf(
-                    AccessDeniedException.class);
+    assertThatThrownBy(() -> gradeService.getForUser(id, otherStudent))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -512,21 +382,12 @@ class GradeServiceTest {
     Grade grade = new Grade();
     grade.setId(id);
 
-    when(gradeRepository.findById(id))
-            .thenReturn(Optional.of(grade));
+    when(gradeRepository.findById(id)).thenReturn(Optional.of(grade));
 
-    List<GradeHistory> history =
-            List.of(new GradeHistory());
+    List<GradeHistory> history = List.of(new GradeHistory());
 
-    when(
-            gradeHistoryRepository
-                    .findByGradeIdOrderByChangedAtDesc(id))
-            .thenReturn(history);
+    when(gradeHistoryRepository.findByGradeIdOrderByChangedAtDesc(id)).thenReturn(history);
 
-    assertThat(
-            gradeService.findHistoryForUser(
-                    id,
-                    Admin.builder().build()))
-            .isEqualTo(history);
+    assertThat(gradeService.findHistoryForUser(id, Admin.builder().build())).isEqualTo(history);
   }
 }

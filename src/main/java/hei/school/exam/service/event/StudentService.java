@@ -9,12 +9,10 @@ import hei.school.exam.entity.Student;
 import hei.school.exam.entity.Teacher;
 import hei.school.exam.entity.TrackSemesterCourse;
 import hei.school.exam.repository.*;
-
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -120,18 +118,18 @@ public class StudentService {
       throw new AccessDeniedException("Student is not in a taught group");
 
     Teacher freshTeacher =
-            teacherRepository
-                    .findByIdWithCourses(teacher.getId())
-                    .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacher.getId()));
+        teacherRepository
+            .findByIdWithCourses(teacher.getId())
+            .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacher.getId()));
     Set<UUID> teacherCourseIds =
-            freshTeacher.getCourses() == null
-                    ? Set.of()
-                    : freshTeacher.getCourses().stream().map(Course::getId).collect(Collectors.toSet());
+        freshTeacher.getCourses() == null
+            ? Set.of()
+            : freshTeacher.getCourses().stream().map(Course::getId).collect(Collectors.toSet());
 
     boolean teaches =
-            trackSemesterCourseRepository.findByTrackId(student.getGroup().getTrack().getId()).stream()
-                    .map(TrackSemesterCourse::getCourse)
-                    .anyMatch(course -> teacherCourseIds.contains(course.getId()));
+        trackSemesterCourseRepository.findByTrackId(student.getGroup().getTrack().getId()).stream()
+            .map(TrackSemesterCourse::getCourse)
+            .anyMatch(course -> teacherCourseIds.contains(course.getId()));
 
     if (!teaches) throw new AccessDeniedException("Teacher does not teach this student");
   }

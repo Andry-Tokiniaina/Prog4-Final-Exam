@@ -20,8 +20,6 @@ public class Course {
   private String title;
   private int credit;
 
-  @ManyToMany
-  @lombok.ToString.Exclude
-  @lombok.EqualsAndHashCode.Exclude
+  @ManyToMany @lombok.ToString.Exclude @lombok.EqualsAndHashCode.Exclude
   private List<Teacher> teachers;
 }

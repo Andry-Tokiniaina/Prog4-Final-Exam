@@ -44,32 +44,27 @@ class StudentServiceTest {
     studentRepository = mock(StudentRepository.class);
     groupRepository = mock(GroupRepository.class);
     gradeRepository = mock(GradeRepository.class);
-    trackSemesterCourseRepository =
-            mock(TrackSemesterCourseRepository.class);
+    trackSemesterCourseRepository = mock(TrackSemesterCourseRepository.class);
     passwordEncoder = mock(PasswordEncoder.class);
     teacherRepository = mock(TeacherRepository.class);
 
     studentService =
-            new StudentService(
-                    studentRepository,
-                    groupRepository,
-                    gradeRepository,
-                    trackSemesterCourseRepository,
-                    passwordEncoder,
-                    teacherRepository);
+        new StudentService(
+            studentRepository,
+            groupRepository,
+            gradeRepository,
+            trackSemesterCourseRepository,
+            passwordEncoder,
+            teacherRepository);
   }
 
-  private Group groupWithCohortAndTrack(
-          UUID groupId,
-          UUID cohortId,
-          UUID trackId) {
+  private Group groupWithCohortAndTrack(UUID groupId, UUID cohortId, UUID trackId) {
 
     Group group = new Group();
     group.setId(groupId);
 
     if (cohortId != null) {
-      hei.school.exam.entity.Cohort cohort =
-              new hei.school.exam.entity.Cohort();
+      hei.school.exam.entity.Cohort cohort = new hei.school.exam.entity.Cohort();
       cohort.setId(cohortId);
       group.setCohort(cohort);
     }
@@ -89,40 +84,27 @@ class StudentServiceTest {
     UUID cohortId = UUID.randomUUID();
     UUID trackId = UUID.randomUUID();
 
-    Group group =
-            groupWithCohortAndTrack(groupId, cohortId, trackId);
+    Group group = groupWithCohortAndTrack(groupId, cohortId, trackId);
 
     Student matching = new Student();
     matching.setGroup(group);
 
     Student other = new Student();
     other.setGroup(
-            groupWithCohortAndTrack(
-                    UUID.randomUUID(),
-                    UUID.randomUUID(),
-                    UUID.randomUUID()));
+        groupWithCohortAndTrack(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
 
-    when(studentRepository.findAll())
-            .thenReturn(List.of(matching, other));
+    when(studentRepository.findAll()).thenReturn(List.of(matching, other));
 
-    assertThat(
-            studentService.findAll(
-                    cohortId,
-                    groupId,
-                    trackId))
-            .containsExactly(matching);
+    assertThat(studentService.findAll(cohortId, groupId, trackId)).containsExactly(matching);
   }
 
   @Test
   void findById_throws_when_missing() {
     UUID id = UUID.randomUUID();
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.empty());
+    when(studentRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () -> studentService.findById(id))
-            .isInstanceOf(RuntimeException.class);
+    assertThatThrownBy(() -> studentService.findById(id)).isInstanceOf(RuntimeException.class);
   }
 
   @Test
@@ -132,21 +114,11 @@ class StudentServiceTest {
     Group group = new Group();
     group.setId(groupId);
 
-    when(groupRepository.findById(groupId))
-            .thenReturn(Optional.of(group));
-    when(passwordEncoder.encode("pwd"))
-            .thenReturn("enc");
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+    when(passwordEncoder.encode("pwd")).thenReturn("enc");
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    StudentInput input =
-            new StudentInput(
-                    "STD1",
-                    "Jean",
-                    "Dupont",
-                    "j@d.com",
-                    "pwd",
-                    groupId);
+    StudentInput input = new StudentInput("STD1", "Jean", "Dupont", "j@d.com", "pwd", groupId);
 
     Student created = studentService.create(input);
 
@@ -157,19 +129,10 @@ class StudentServiceTest {
 
   @Test
   void create_without_group() {
-    when(passwordEncoder.encode("pwd"))
-            .thenReturn("enc");
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(passwordEncoder.encode("pwd")).thenReturn("enc");
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    StudentInput input =
-            new StudentInput(
-                    "STD1",
-                    "Jean",
-                    "Dupont",
-                    "j@d.com",
-                    "pwd",
-                    null);
+    StudentInput input = new StudentInput("STD1", "Jean", "Dupont", "j@d.com", "pwd", null);
 
     Student created = studentService.create(input);
 
@@ -180,23 +143,12 @@ class StudentServiceTest {
   void create_throws_when_group_missing() {
     UUID groupId = UUID.randomUUID();
 
-    when(groupRepository.findById(groupId))
-            .thenReturn(Optional.empty());
-    when(passwordEncoder.encode(any()))
-            .thenReturn("enc");
+    when(groupRepository.findById(groupId)).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(any())).thenReturn("enc");
 
-    StudentInput input =
-            new StudentInput(
-                    "STD1",
-                    "Jean",
-                    "Dupont",
-                    "j@d.com",
-                    "pwd",
-                    groupId);
+    StudentInput input = new StudentInput("STD1", "Jean", "Dupont", "j@d.com", "pwd", groupId);
 
-    assertThatThrownBy(
-            () -> studentService.create(input))
-            .isInstanceOf(RuntimeException.class);
+    assertThatThrownBy(() -> studentService.create(input)).isInstanceOf(RuntimeException.class);
   }
 
   @Test
@@ -207,29 +159,16 @@ class StudentServiceTest {
     student.setId(id);
     student.setPassword("old");
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
-    when(passwordEncoder.encode("newpass"))
-            .thenReturn("encNew");
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
+    when(passwordEncoder.encode("newpass")).thenReturn("encNew");
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    StudentUpdateInput input =
-            new StudentUpdateInput(
-                    "STD2",
-                    "A",
-                    "B",
-                    "a@b.com",
-                    "newpass",
-                    null);
+    StudentUpdateInput input = new StudentUpdateInput("STD2", "A", "B", "a@b.com", "newpass", null);
 
-    Student updated =
-            studentService.update(id, input);
+    Student updated = studentService.update(id, input);
 
-    assertThat(updated.getPassword())
-            .isEqualTo("encNew");
-    assertThat(updated.getRef())
-            .isEqualTo("STD2");
+    assertThat(updated.getPassword()).isEqualTo("encNew");
+    assertThat(updated.getRef()).isEqualTo("STD2");
   }
 
   @Test
@@ -240,25 +179,14 @@ class StudentServiceTest {
     student.setId(id);
     student.setPassword("old");
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    StudentUpdateInput input =
-            new StudentUpdateInput(
-                    "STD2",
-                    "A",
-                    "B",
-                    "a@b.com",
-                    "",
-                    null);
+    StudentUpdateInput input = new StudentUpdateInput("STD2", "A", "B", "a@b.com", "", null);
 
-    Student updated =
-            studentService.update(id, input);
+    Student updated = studentService.update(id, input);
 
-    assertThat(updated.getPassword())
-            .isEqualTo("old");
+    assertThat(updated.getPassword()).isEqualTo("old");
   }
 
   @Test
@@ -272,39 +200,23 @@ class StudentServiceTest {
     Group group = new Group();
     group.setId(groupId);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
-    when(groupRepository.findById(groupId))
-            .thenReturn(Optional.of(group));
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
+    when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    StudentUpdateInput input =
-            new StudentUpdateInput(
-                    "STD2",
-                    "A",
-                    "B",
-                    "a@b.com",
-                    null,
-                    groupId);
+    StudentUpdateInput input = new StudentUpdateInput("STD2", "A", "B", "a@b.com", null, groupId);
 
-    Student updated =
-            studentService.update(id, input);
+    Student updated = studentService.update(id, input);
 
-    assertThat(updated.getGroup())
-            .isEqualTo(group);
+    assertThat(updated.getGroup()).isEqualTo(group);
   }
 
   @Test
   void checkTeacherTeachesStudent_throws_when_no_group_or_track() {
     Student student = new Student();
 
-    assertThatThrownBy(
-            () ->
-                    studentService.checkTeacherTeachesStudent(
-                            new Teacher(),
-                            student))
-            .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> studentService.checkTeacherTeachesStudent(new Teacher(), student))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -335,18 +247,12 @@ class StudentServiceTest {
     TrackSemesterCourse tsc = new TrackSemesterCourse();
     tsc.setCourse(course);
 
-    when(teacherRepository.findByIdWithCourses(teacherId))
-            .thenReturn(Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of(tsc));
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of(tsc));
 
-    assertThatThrownBy(
-            () ->
-                    studentService.checkTeacherTeachesStudent(
-                            teacher,
-                            student))
-            .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> studentService.checkTeacherTeachesStudent(teacher, student))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -379,15 +285,11 @@ class StudentServiceTest {
     TrackSemesterCourse tsc = new TrackSemesterCourse();
     tsc.setCourse(course);
 
-    when(teacherRepository.findByIdWithCourses(teacherId))
-            .thenReturn(Optional.of(freshTeacher));
+    when(teacherRepository.findByIdWithCourses(teacherId)).thenReturn(Optional.of(freshTeacher));
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of(tsc));
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of(tsc));
 
-    studentService.checkTeacherTeachesStudent(
-            teacher,
-            student);
+    studentService.checkTeacherTeachesStudent(teacher, student);
   }
 
   @Test
@@ -397,14 +299,9 @@ class StudentServiceTest {
     Student student = new Student();
     student.setId(id);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
-    assertThat(
-            studentService.getForUser(
-                    id,
-                    Admin.builder().build()))
-            .isEqualTo(student);
+    assertThat(studentService.getForUser(id, Admin.builder().build())).isEqualTo(student);
   }
 
   @Test
@@ -414,11 +311,9 @@ class StudentServiceTest {
     Student student = new Student();
     student.setId(id);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
-    assertThat(studentService.hasDiploma(id))
-            .isFalse();
+    assertThat(studentService.hasDiploma(id)).isFalse();
   }
 
   @Test
@@ -436,14 +331,11 @@ class StudentServiceTest {
     student.setId(id);
     student.setGroup(group);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of());
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of());
 
-    assertThat(studentService.hasDiploma(id))
-            .isFalse();
+    assertThat(studentService.hasDiploma(id)).isFalse();
   }
 
   @Test
@@ -461,8 +353,7 @@ class StudentServiceTest {
     student.setId(id);
     student.setGroup(group);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
     Course course = new Course();
     course.setId(UUID.randomUUID());
@@ -470,8 +361,7 @@ class StudentServiceTest {
     TrackSemesterCourse tsc = new TrackSemesterCourse();
     tsc.setCourse(course);
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of(tsc));
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of(tsc));
 
     Exam exam = new Exam();
     exam.setCourse(course);
@@ -482,11 +372,9 @@ class StudentServiceTest {
     grade.setValue(15);
     grade.setStudent(student);
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of(grade));
+    when(gradeRepository.findAll()).thenReturn(List.of(grade));
 
-    assertThat(studentService.hasDiploma(id))
-            .isTrue();
+    assertThat(studentService.hasDiploma(id)).isTrue();
   }
 
   @Test
@@ -504,8 +392,7 @@ class StudentServiceTest {
     student.setId(id);
     student.setGroup(group);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
     Course course = new Course();
     course.setId(UUID.randomUUID());
@@ -513,14 +400,11 @@ class StudentServiceTest {
     TrackSemesterCourse tsc = new TrackSemesterCourse();
     tsc.setCourse(course);
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of(tsc));
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of(tsc));
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of());
+    when(gradeRepository.findAll()).thenReturn(List.of());
 
-    assertThat(studentService.hasDiploma(id))
-            .isFalse();
+    assertThat(studentService.hasDiploma(id)).isFalse();
   }
 
   @Test
@@ -538,8 +422,7 @@ class StudentServiceTest {
     student.setId(id);
     student.setGroup(group);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
     Course course = new Course();
     course.setId(UUID.randomUUID());
@@ -547,8 +430,7 @@ class StudentServiceTest {
     TrackSemesterCourse tsc = new TrackSemesterCourse();
     tsc.setCourse(course);
 
-    when(trackSemesterCourseRepository.findByTrackId(trackId))
-            .thenReturn(List.of(tsc));
+    when(trackSemesterCourseRepository.findByTrackId(trackId)).thenReturn(List.of(tsc));
 
     Exam exam = new Exam();
     exam.setCourse(course);
@@ -559,11 +441,9 @@ class StudentServiceTest {
     grade.setValue(5);
     grade.setStudent(student);
 
-    when(gradeRepository.findAll())
-            .thenReturn(List.of(grade));
+    when(gradeRepository.findAll()).thenReturn(List.of(grade));
 
-    assertThat(studentService.hasDiploma(id))
-            .isFalse();
+    assertThat(studentService.hasDiploma(id)).isFalse();
   }
 
   @Test
@@ -573,13 +453,11 @@ class StudentServiceTest {
     Student student = new Student();
     student.setId(id);
 
-    when(studentRepository.findById(id))
-            .thenReturn(Optional.of(student));
+    when(studentRepository.findById(id)).thenReturn(Optional.of(student));
 
     studentService.delete(id);
 
-    verify(studentRepository, times(1))
-            .delete(student);
+    verify(studentRepository, times(1)).delete(student);
   }
 
   @Test
@@ -593,20 +471,13 @@ class StudentServiceTest {
     Group group = new Group();
     group.setId(groupId);
 
-    when(studentRepository.findById(studentId))
-            .thenReturn(Optional.of(student));
-    when(groupRepository.findById(groupId))
-            .thenReturn(Optional.of(group));
-    when(studentRepository.save(any()))
-            .thenAnswer(inv -> inv.getArgument(0));
+    when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+    when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+    when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    Student updated =
-            studentService.changeGroup(
-                    studentId,
-                    groupId);
+    Student updated = studentService.changeGroup(studentId, groupId);
 
-    assertThat(updated.getGroup())
-            .isEqualTo(group);
+    assertThat(updated.getGroup()).isEqualTo(group);
   }
 
   @Test
@@ -625,10 +496,8 @@ class StudentServiceTest {
     Student other = new Student();
     other.setGroup(otherGroup);
 
-    when(studentRepository.findAll())
-            .thenReturn(List.of(matching, other));
+    when(studentRepository.findAll()).thenReturn(List.of(matching, other));
 
-    assertThat(studentService.findByGroup(groupId))
-            .containsExactly(matching);
+    assertThat(studentService.findByGroup(groupId)).containsExactly(matching);
   }
 }

@@ -59,8 +59,8 @@ class CourseServiceTest {
     when(courseRepository.findById(id)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> courseService.findById(id))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Course not found");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Course not found");
   }
 
   @Test
@@ -85,8 +85,7 @@ class CourseServiceTest {
     when(courseRepository.findById(id)).thenReturn(Optional.of(existing));
     when(courseRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    Course updated =
-            courseService.update(id, new CourseInput("NEW", "NewTitle", 10));
+    Course updated = courseService.update(id, new CourseInput("NEW", "NewTitle", 10));
 
     assertThat(updated.getId()).isEqualTo(id);
     assertThat(updated.getRef()).isEqualTo("NEW");
@@ -114,8 +113,7 @@ class CourseServiceTest {
     Course course = new Course();
     course.setId(id);
 
-    when(courseRepository.findByIdWithTeachers(id))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(id)).thenReturn(Optional.of(course));
 
     assertThat(courseService.findTeachers(id)).isEmpty();
   }
@@ -131,11 +129,9 @@ class CourseServiceTest {
     course.setId(id);
     course.setTeachers(new ArrayList<>(List.of(teacher)));
 
-    when(courseRepository.findByIdWithTeachers(id))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(id)).thenReturn(Optional.of(course));
 
-    assertThat(courseService.findTeachers(id))
-            .containsExactly(teacher);
+    assertThat(courseService.findTeachers(id)).containsExactly(teacher);
   }
 
   @Test
@@ -149,10 +145,8 @@ class CourseServiceTest {
     Teacher teacher = new Teacher();
     teacher.setId(teacherId);
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId))
-            .thenReturn(Optional.of(teacher));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
 
     courseService.assignTeacher(courseId, teacherId);
 
@@ -177,10 +171,8 @@ class CourseServiceTest {
     course.setTeachers(new ArrayList<>(List.of(teacher)));
     teacher.setCourses(new ArrayList<>(List.of(course)));
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId))
-            .thenReturn(Optional.of(teacher));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
 
     courseService.assignTeacher(courseId, teacherId);
 
@@ -196,15 +188,12 @@ class CourseServiceTest {
     Course course = new Course();
     course.setId(courseId);
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId))
-            .thenReturn(Optional.empty());
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(
-            () -> courseService.assignTeacher(courseId, teacherId))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Teacher not found");
+    assertThatThrownBy(() -> courseService.assignTeacher(courseId, teacherId))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Teacher not found");
   }
 
   @Test
@@ -221,10 +210,8 @@ class CourseServiceTest {
 
     teacher.setCourses(new ArrayList<>(List.of(course)));
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
-    when(teacherRepository.findById(teacherId))
-            .thenReturn(Optional.of(teacher));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teacherRepository.findById(teacherId)).thenReturn(Optional.of(teacher));
 
     courseService.removeTeacher(courseId, teacherId);
 
@@ -244,12 +231,10 @@ class CourseServiceTest {
     course.setId(courseId);
     course.setTeachers(new ArrayList<>());
 
-    when(courseRepository.findByIdWithTeachers(courseId))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(courseId)).thenReturn(Optional.of(course));
 
-    assertThatThrownBy(
-            () -> courseService.checkTeacherOnCourse(teacher, course))
-            .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> courseService.checkTeacherOnCourse(teacher, course))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -264,8 +249,7 @@ class CourseServiceTest {
     course.setId(courseId);
     course.setTeachers(new ArrayList<>(List.of(teacher)));
 
-    when(courseRepository.findByIdWithTeachers(courseId))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(courseId)).thenReturn(Optional.of(course));
 
     courseService.checkTeacherOnCourse(teacher, course);
   }
@@ -282,14 +266,11 @@ class CourseServiceTest {
     course.setId(courseId);
     course.setTeachers(new ArrayList<>());
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
-    when(courseRepository.findByIdWithTeachers(courseId))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseRepository.findByIdWithTeachers(courseId)).thenReturn(Optional.of(course));
 
-    assertThatThrownBy(
-            () -> courseService.getForUser(courseId, teacher))
-            .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> courseService.getForUser(courseId, teacher))
+        .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -299,14 +280,11 @@ class CourseServiceTest {
     Course course = new Course();
     course.setId(courseId);
 
-    when(courseRepository.findById(courseId))
-            .thenReturn(Optional.of(course));
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
-    hei.school.exam.entity.Admin admin =
-            hei.school.exam.entity.Admin.builder().build();
+    hei.school.exam.entity.Admin admin = hei.school.exam.entity.Admin.builder().build();
 
-    assertThat(courseService.getForUser(courseId, admin))
-            .isEqualTo(course);
+    assertThat(courseService.getForUser(courseId, admin)).isEqualTo(course);
 
     verify(courseRepository, never()).save(any());
   }
